@@ -4,17 +4,20 @@
   <meta charset="UTF-8" />
   <title>عقد العميل</title>
   <style>
-    body { font-family: Arial; direction: rtl; }
-    img { width: 300px; display: block; margin: 10px 0; }
+    body { font-family: Arial; direction: rtl; padding: 20px; background-color: #f0f0f0; }
+    img { width: 300px; display: block; margin: 10px 0; border: 1px solid #ccc; }
+    .box { background: white; padding: 15px; border: 1px solid #aaa; }
   </style>
 </head>
 <body>
-  <h2>عقد العميل</h2>
-  <p>الكود: <span id="code"></span></p>
-  <p>اسم العميل: <span id="name"></span></p>
-  <p>رقم الهاتف: <span id="phone"></span></p>
-  <p>العقد:</p><img id="contractImg" />
-  <p>الحسابات:</p><img id="accountsImg" />
+  <div class="box">
+    <h2>عقد العميل</h2>
+    <p>الكود: <span id="code"></span></p>
+    <p>اسم العميل: <span id="name"></span></p>
+    <p>رقم الهاتف: <span id="phone"></span></p>
+    <p>📄 العقد:</p><img id="contractImg" />
+    <p>📊 الحسابات:</p><img id="accountsImg" />
+  </div>
 
   <script type="module">
     import { db } from "./firebase-config.js";
