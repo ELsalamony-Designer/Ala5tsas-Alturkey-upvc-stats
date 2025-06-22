@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>العملاء - ATR</title>
+  <style>
+    table { width: 100%; border-collapse: collapse; direction: rtl; font-family: Arial }
+    th, td { border: 1px solid #aaa; padding: 8px; text-align: center; }
+    button { margin: 2px; }
+  </style>
+</head>
+<body>
+  <h2>جدول العملاء</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>كود</th>
+        <th>اسم العميل</th>
+        <th>رقم التليفون</th>
+        <th>عرض السعر</th>
+        <th>رسومات</th>
+        <th>إجراءات</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody">
+      <!-- البيانات من Firebase هتتحط هنا -->
+    </tbody>
+  </table>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>
