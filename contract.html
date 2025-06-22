@@ -1,32 +1,40 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <title>العملاء - ATR</title>
+  <meta charset="UTF-8" />
+  <title>عقد العميل</title>
   <style>
-    table { width: 100%; border-collapse: collapse; direction: rtl; font-family: Arial }
-    th, td { border: 1px solid #aaa; padding: 8px; text-align: center; }
-    button { margin: 2px; }
+    body { font-family: Arial; direction: rtl; }
+    img { width: 300px; display: block; margin: 10px 0; }
   </style>
 </head>
 <body>
-  <h2>جدول العملاء</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>كود</th>
-        <th>اسم العميل</th>
-        <th>رقم التليفون</th>
-        <th>عقد</th>
-        <th>حسابات</th>
-        <th>إجراءات</th>
-      </tr>
-    </thead>
-    <tbody id="tableBody">
-      <!-- البيانات من Firebase هتتحط هنا -->
-    </tbody>
-  </table>
+  <h2>عقد العميل</h2>
+  <p>الكود: <span id="code"></span></p>
+  <p>اسم العميل: <span id="name"></span></p>
+  <p>رقم الهاتف: <span id="phone"></span></p>
+  <p>العقد:</p><img id="contractImg" />
+  <p>الحسابات:</p><img id="accountsImg" />
 
-  <script type="module" src="script.js"></script>
+  <script type="module">
+    import { db } from "./firebase-config.js";
+    import {
+      collection, query, where, getDocs
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const code = parseInt(localStorage.getItem("contractCode"));
+    const customersCollection = collection(db, "customers");
+    const q = query(customersCollection, where("code", "==", code));
+    const snapshot = await getDocs(q);
+
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      document.getElementById("code").innerText = data.code;
+      document.getElementById("name").innerText = data.name;
+      document.getElementById("phone").innerText = data.phone;
+      document.getElementById("contractImg").src = data.offer;
+      document.getElementById("accountsImg").src = data.drawing;
+    });
+  </script>
 </body>
 </html>
