@@ -31,7 +31,6 @@ async function loadData() {
   });
 }
 
-// إضافة صف جديد
 document.getElementById("addForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const name = document.getElementById("name").value;
@@ -63,7 +62,6 @@ document.getElementById("addForm").addEventListener("submit", async (e) => {
   location.reload();
 });
 
-// الانتقال للعقد
 window.goToContract = function(code) {
   localStorage.setItem("contractCode", code);
   window.location.href = "contract.html";
