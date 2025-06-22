@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <title>العملاء - ATR</title>
+  <meta charset="UTF-8" />
+  <title>جدول العملاء</title>
   <style>
-    table { width: 100%; border-collapse: collapse; direction: rtl; font-family: Arial }
+    body { font-family: Arial; direction: rtl; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
     th, td { border: 1px solid #aaa; padding: 8px; text-align: center; }
-    button { margin: 2px; }
+    img { width: 100px; }
+    input, button { margin: 5px; }
   </style>
 </head>
 <body>
@@ -22,10 +24,17 @@
         <th>إجراءات</th>
       </tr>
     </thead>
-    <tbody id="tableBody">
-      <!-- البيانات من Firebase هتتحط هنا -->
-    </tbody>
+    <tbody id="tableBody"></tbody>
   </table>
+
+  <h3>إضافة صف جديد</h3>
+  <form id="addForm">
+    <input type="text" id="name" placeholder="اسم العميل" required />
+    <input type="text" id="phone" placeholder="رقم التليفون" required />
+    <input type="file" id="offerImg" accept="image/*" required />
+    <input type="file" id="drawingImg" accept="image/*" required />
+    <button type="submit">✅ تأكيد</button>
+  </form>
 
   <script type="module" src="script.js"></script>
 </body>
