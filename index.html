@@ -8,8 +8,7 @@
   <script type="module" src="firebase-config.js"></script>
  <script type="module">
   import { getDatabase, ref, set, remove, get, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-  import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
-  import { database, storage } from './firebase-config.js';
+  import { database } from './firebase-config.js';
 
   let rowCount = 0;
 
@@ -23,8 +22,8 @@
       <td>${code}</td>
       <td><input type="text" id="name-${code}"></td>
       <td><input type="text" id="phone-${code}"></td>
-      <td><input type="file" id="offer-${code}" accept="image/*"></td>
-      <td><input type="file" id="drawing-${code}" accept="image/*"></td>
+      <td><input type="text" id="offer-${code}" placeholder="رابط عرض السعر"></td>
+      <td><input type="text" id="drawing-${code}" placeholder="رابط الرسومات"></td>
       <td><button onclick="confirmRow(${code})">تأكيد</button></td>
       <td><button onclick="editRow(${code})">تعديل</button></td>
       <td><button onclick="sendToContract(${code})">عقد</button></td>
@@ -38,24 +37,15 @@
     const offerInput = document.getElementById(`offer-${code}`);
     const drawInput = document.getElementById(`drawing-${code}`);
 
-    const name = nameInput.value;
-    const phone = phoneInput.value;
-    const offer = offerInput.files[0];
-    const drawing = drawInput.files[0];
+    const name = nameInput.value.trim();
+    const phone = phoneInput.value.trim();
+    const offerURL = offerInput.value.trim();
+    const drawURL = drawInput.value.trim();
 
-    if (!name || !phone || !offer || !drawing) {
-      alert("يرجى ملء كل الحقول ورفع الصور");
+    if (!name || !phone || !offerURL || !drawURL) {
+      alert("يرجى ملء كل الحقول ووضع روابط الصور");
       return;
     }
-
-    const offerRef = sRef(storage, `offers/${code}-${offer.name}`);
-    const drawRef = sRef(storage, `drawings/${code}-${drawing.name}`);
-
-    await uploadBytes(offerRef, offer);
-    await uploadBytes(drawRef, drawing);
-
-    const offerURL = await getDownloadURL(offerRef);
-    const drawURL = await getDownloadURL(drawRef);
 
     await set(ref(database, "clients/" + code), {
       name: name,
@@ -64,7 +54,7 @@
       drawingImage: drawURL
     });
 
-    // تحويل الخانات لنصوص
+    // تحويل الحقول لنصوص وصور
     const row = nameInput.parentElement.parentElement;
     row.children[1].innerText = name;
     row.children[2].innerText = phone;
@@ -74,7 +64,7 @@
     alert("تم الحفظ وتثبيت البيانات");
   };
 
-  // تعديل الحقول مرة تانية
+  // تعديل السطر
   window.editRow = function (code) {
     const dbRef = ref(database);
     get(child(dbRef, `clients/${code}`)).then((snapshot) => {
@@ -88,12 +78,12 @@
 
       row.children[1].innerHTML = `<input type="text" id="name-${code}" value="${data.name}">`;
       row.children[2].innerHTML = `<input type="text" id="phone-${code}" value="${data.phone}">`;
-      row.children[3].innerHTML = `<input type="file" id="offer-${code}" accept="image/*">`;
-      row.children[4].innerHTML = `<input type="file" id="drawing-${code}" accept="image/*">`;
+      row.children[3].innerHTML = `<input type="text" id="offer-${code}" value="${data.offerImage}" placeholder="رابط عرض السعر">`;
+      row.children[4].innerHTML = `<input type="text" id="drawing-${code}" value="${data.drawingImage}" placeholder="رابط الرسومات">`;
     });
   };
 
-  // نقل إلى صفحة العقود
+  // نقل البيانات لصفحة العقود
   window.sendToContract = async function (code) {
     const dbRef = ref(database);
     const snapshot = await get(child(dbRef, `clients/${code}`));
@@ -116,6 +106,7 @@
     location.reload();
   };
 </script>
+
 
 </head>
 <body>
