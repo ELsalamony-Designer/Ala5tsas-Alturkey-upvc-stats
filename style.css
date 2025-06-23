@@ -1,0 +1,23 @@
+body {
+  font-family: 'Arial', sans-serif;
+  direction: rtl;
+  background-color: #f4f4f4;
+  padding: 20px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+}
+th, td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: center;
+}
+input, button {
+  padding: 6px;
+}
+img {
+  max-width: 100px;
+  max-height: 80px;
+}
