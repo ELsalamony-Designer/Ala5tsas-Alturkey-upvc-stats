@@ -1,408 +1,211 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-    <meta charset="UTF-8" />
-    <title>صفحة العقود</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary-color: #4CAF50; /* Green */
-            --primary-dark: #45a049;
-            --secondary-color: #2196F3; /* Blue */
-            --accent-color: #FFC107; /* Amber */
-            --danger-color: #f44336; /* Red */
-            --background-light: #f8f9fa;
-            --background-dark: #e9ecef;
-            --text-color: #343a40;
-            --border-color: #dee2e6;
-            --card-background: #ffffff;
-            --shadow-light: rgba(0, 0, 0, 0.08);
-            --shadow-medium: rgba(0, 0, 0, 0.12);
-        }
+  <meta charset="UTF-8" />
+  <title>صفحة العقود</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #4CAF50;
+      --primary-dark: #45a049;
+      --secondary-color: #2196F3;
+      --accent-color: #FFC107;
+      --danger-color: #f44336;
+      --background-light: #f8f9fa;
+      --background-dark: #e9ecef;
+      --text-color: #343a40;
+      --border-color: #dee2e6;
+      --card-background: #ffffff;
+      --shadow-light: rgba(0, 0, 0, 0.08);
+    }
+    body {
+      font-family: 'Cairo', sans-serif;
+      direction: rtl;
+      padding: 20px;
+      background-color: var(--background-light);
+      color: var(--text-color);
+    }
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      background: var(--card-background);
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px var(--shadow-light);
+    }
+    h2 {
+      text-align: center;
+      color: var(--primary-color);
+    }
+    .search-box {
+      margin-bottom: 15px;
+      text-align: center;
+    }
+    .search-box input {
+      padding: 10px;
+      width: 80%;
+      max-width: 400px;
+      font-size: 16px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid var(--border-color);
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background: var(--primary-color);
+      color: white;
+    }
+    img {
+      max-width: 100px;
+      max-height: 80px;
+      border: 1px solid var(--border-color);
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 6px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+    }
+    .actions button {
+      padding: 6px 12px;
+      margin: 2px;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .save-btn { background: var(--primary-color); }
+    .return-btn { background: var(--secondary-color); }
+    .edit-btn { background: var(--accent-color); color: #000; }
+    .delete-btn { background: var(--danger-color); }
+  </style>
+  <script type="module">
+    import { getDatabase, ref, set, remove, get, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { database } from './firebase-config.js';
 
-        body {
-            font-family: 'Cairo', sans-serif;
-            direction: rtl;
-            padding: 20px;
-            background-color: var(--background-light);
-            color: var(--text-color);
-            margin: 0;
-            line-height: 1.6;
-        }
+    window.onload = function () {
+      loadContracts();
+      document.getElementById("search").addEventListener("input", filterTable);
+    };
 
-        .container {
-            max-width: 1200px;
-            margin: 20px auto;
-            background-color: var(--card-background);
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px var(--shadow-light);
-        }
+    function filterTable() {
+      const value = document.getElementById("search").value.toLowerCase();
+      const rows = document.querySelectorAll("#tableBody tr");
+      rows.forEach(row => {
+        const name = row.querySelector("td[data-label='الاسم']").innerText.toLowerCase();
+        const phone = row.querySelector("td[data-label='رقم الهاتف']").innerText.toLowerCase();
+        row.style.display = (name.includes(value) || phone.includes(value)) ? "" : "none";
+      });
+    }
 
-        h2 {
-            text-align: center;
-            color: var(--primary-color);
-            margin-bottom: 30px;
-            font-size: 2.2em;
-            font-weight: 700;
-        }
+    async function loadContracts() {
+      const dbRef = ref(database, "contracts");
+      const tableBody = document.getElementById("tableBody");
+      const snapshot = await get(dbRef);
+      if (snapshot.exists()) {
+        snapshot.forEach(childSnap => {
+          const code = childSnap.key;
+          const data = childSnap.val();
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td data-label="الكود">${code}</td>
+            <td data-label="الاسم">${data.name}</td>
+            <td data-label="رقم الهاتف">${data.phone}</td>
+            <td data-label="رابط صورة العقد"><input type="text" id="contract-${code}" value="${data.contractImage || ''}" /></td>
+            <td data-label="رابط صورة الحسابات"><input type="text" id="accounts-${code}" value="${data.accountsImage || ''}" /></td>
+            <td data-label="صورة العقد"><img src="${data.contractImage || 'https://via.placeholder.com/100x80'}" /></td>
+            <td data-label="صورة الحسابات"><img src="${data.accountsImage || 'https://via.placeholder.com/100x80'}" /></td>
+            <td class="actions">
+              <button class="save-btn" onclick="saveImages('${code}')">تأكيد</button>
+              <button class="return-btn" onclick="returnToClients('${code}')">إرجاع</button>
+              <button class="edit-btn" onclick="editRow('${code}')">تعديل</button>
+              <button class="delete-btn" onclick="deleteRow('${code}')">حذف</button>
+            </td>`;
+          tableBody.appendChild(row);
+        });
+      }
+    }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            box-shadow: 0 2px 8px var(--shadow-light);
-            border-radius: 8px;
-            overflow: hidden; /* Ensures rounded corners apply to table content */
-        }
+    window.saveImages = async function (code) {
+      const contractURL = document.getElementById(`contract-${code}`).value.trim();
+      const accountsURL = document.getElementById(`accounts-${code}`).value.trim();
+      const snapshot = await get(child(ref(database), `contracts/${code}`));
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        await set(ref(database, `contracts/${code}`), {
+          name: data.name,
+          phone: data.phone,
+          contractImage: contractURL,
+          accountsImage: accountsURL
+        });
+        alert("✅ تم حفظ الصور الجديدة بنجاح!");
+        location.reload();
+      }
+    };
 
-        th, td {
-            border: 1px solid var(--border-color);
-            padding: 12px 15px;
-            text-align: center;
-            vertical-align: middle;
-        }
+    window.returnToClients = async function (code) {
+      const snapshot = await get(child(ref(database), `contracts/${code}`));
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        await set(ref(database, `clients/${code}`), {
+          name: data.name,
+          phone: data.phone,
+          offerImage: data.contractImage,
+          drawingImage: data.accountsImage
+        });
+        await remove(ref(database, `contracts/${code}`));
+        alert("🔁 تم الإرجاع بنجاح!");
+        location.reload();
+      }
+    };
 
-        th {
-            background-color: var(--primary-color);
-            color: white;
-            font-weight: 600;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
+    window.editRow = async function (code) {
+      const snapshot = await get(child(ref(database), `contracts/${code}`));
+      if (snapshot.exists()) {
+        document.getElementById(`contract-${code}`).value = snapshot.val().contractImage || '';
+        document.getElementById(`accounts-${code}`).value = snapshot.val().accountsImage || '';
+      }
+    };
 
-        tr:nth-child(even) {
-            background-color: var(--background-dark);
-        }
-
-        tr:hover {
-            background-color: #e2e6ea;
-            transition: background-color 0.3s ease;
-        }
-
-        input[type="text"] {
-            width: calc(100% - 16px); /* Account for padding */
-            padding: 8px;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            box-sizing: border-box; /* Include padding in width */
-            font-size: 0.95em;
-            transition: border-color 0.3s ease;
-        }
-
-        input[type="text"]:focus {
-            border-color: var(--secondary-color);
-            outline: none;
-            box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
-        }
-
-        .actions button {
-            padding: 8px 15px;
-            margin: 3px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.9em;
-            font-weight: 600;
-            transition: background-color 0.3s ease, transform 0.2s ease;
-            color: white;
-        }
-
-        .actions button:hover {
-            transform: translateY(-2px);
-        }
-
-        .actions .save-btn {
-            background-color: var(--primary-color);
-        }
-
-        .actions .save-btn:hover {
-            background-color: var(--primary-dark);
-        }
-
-        .actions .return-btn {
-            background-color: var(--secondary-color);
-        }
-
-        .actions .return-btn:hover {
-            background-color: #1976D2; /* Darker blue */
-        }
-
-        .actions .edit-btn {
-            background-color: var(--accent-color);
-            color: var(--text-color);
-        }
-
-        .actions .edit-btn:hover {
-            background-color: #FB8C00; /* Darker amber */
-        }
-
-        .actions .delete-btn {
-            background-color: var(--danger-color);
-        }
-
-        .actions .delete-btn:hover {
-            background-color: #D32F2F; /* Darker red */
-        }
-
-        img {
-            max-width: 100px;
-            max-height: 80px;
-            border-radius: 4px;
-            object-fit: contain; /* Ensures the image fits within the bounds without cropping */
-            border: 1px solid var(--border-color);
-            padding: 2px;
-            background-color: #fff;
-        }
-
-        /* Style for the new "Go Home" button */
-        .home-button {
-            display: inline-block;
-            background-color: var(--secondary-color);
-            color: white;
-            padding: 10px 20px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: background-color 0.3s ease, transform 0.2s ease;
-            border: none; /* Add this to remove default button border */
-            cursor: pointer; /* Add cursor pointer */
-        }
-
-        .home-button:hover {
-            background-color: #1976D2;
-            transform: translateY(-2px);
-        }
-
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 15px;
-                margin: 10px;
-            }
-
-            h2 {
-                font-size: 1.8em;
-            }
-
-            table, thead, tbody, th, td, tr {
-                display: block;
-            }
-
-            thead tr {
-                position: absolute;
-                top: -9999px;
-                left: -9999px;
-            }
-
-            tr {
-                border: 1px solid var(--border-color);
-                margin-bottom: 10px;
-                border-radius: 8px;
-                overflow: hidden;
-            }
-
-            td {
-                border: none;
-                border-bottom: 1px solid var(--border-color);
-                position: relative;
-                padding-left: 50%;
-                text-align: right; /* Align content to the right in stacked view */
-            }
-
-            td:last-child {
-                border-bottom: none;
-            }
-
-            td:before {
-                content: attr(data-label);
-                position: absolute;
-                right: 6px;
-                width: 45%;
-                padding-left: 10px;
-                font-weight: 600;
-                text-align: left; /* Align labels to the left */
-                color: var(--primary-color);
-            }
-
-            .actions button {
-                display: block;
-                width: calc(100% - 6px); /* Adjusted for margin */
-                margin-bottom: 5px;
-            }
-        }
-    </style>
-
-    <script type="module" src="firebase-config.js"></script>
-    <script type="module">
-        import { getDatabase, ref, set, remove, get, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-        import { database } from './firebase-config.js';
-
-        // Function to load contracts from the database
-        window.onload = function () {
-            const dbRef = ref(database, "contracts");
-            const tableBody = document.getElementById("tableBody");
-
-            get(dbRef).then(snapshot => {
-                if (snapshot.exists()) {
-                    snapshot.forEach(childSnap => {
-                        const code = childSnap.key;
-                        const data = childSnap.val();
-
-                        const row = tableBody.insertCell(); // Using insertCell for more structured row creation
-                        row.setAttribute('data-code', code); // Add data-code for easier targeting
-                        row.innerHTML = `
-                            <td data-label="الكود">${code}</td>
-                            <td data-label="الاسم">${data.name}</td>
-                            <td data-label="رقم الهاتف">${data.phone}</td>
-                            <td data-label="رابط صورة العقد"><input type="text" id="contract-${code}" value="${data.contractImage || ''}" /></td>
-                            <td data-label="رابط صورة الحسابات"><input type="text" id="accounts-${code}" value="${data.accountsImage || ''}" /></td>
-                            <td data-label="صورة العقد"><img src="${data.contractImage || 'https://via.placeholder.com/100x80?text=No+Image'}" alt="صورة العقد" onerror="this.src='https://via.placeholder.com/100x80?text=Error+Loading';" /></td>
-                            <td data-label="صورة الحسابات"><img src="${data.accountsImage || 'https://via.placeholder.com/100x80?text=No+Image'}" alt="صورة الحسابات" onerror="this.src='https://via.placeholder.com/100x80?text=Error+Loading';" /></td>
-                            <td data-label="التحكم" class="actions">
-                                <button onclick="saveImages('${code}')" class="save-btn">تأكيد</button>
-                                <button onclick="returnToClients('${code}')" class="return-btn">إرجاع</button>
-                                <button onclick="editRow('${code}')" class="edit-btn">تعديل</button>
-                                <button onclick="deleteRow('${code}')" class="delete-btn">حذف</button>
-                            </td>
-                        `;
-                    });
-                } else {
-                    tableBody.innerHTML = `<tr><td colspan="8">لا توجد عقود حالياً.</td></tr>`;
-                }
-            }).catch(error => {
-                console.error("Error loading contracts: ", error);
-                tableBody.innerHTML = `<tr><td colspan="8" style="color:var(--danger-color);">حدث خطأ أثناء تحميل العقود.</td></tr>`;
-            });
-        };
-
-        // Save new image URLs
-        window.saveImages = async function (code) {
-            const contractInput = document.getElementById(`contract-${code}`);
-            const accountsInput = document.getElementById(`accounts-${code}`);
-
-            const contractURL = contractInput.value.trim();
-            const accountsURL = accountsInput.value.trim();
-
-            if (!contractURL || !accountsURL) {
-                alert("برجاء ملء روابط الصورتين.");
-                return;
-            }
-
-            try {
-                const dbRef = ref(database);
-                const snapshot = await get(child(dbRef, `contracts/${code}`));
-
-                if (!snapshot.exists()) {
-                    alert("العقد غير موجود.");
-                    return;
-                }
-
-                const data = snapshot.val();
-                await set(ref(database, `contracts/${code}`), {
-                    name: data.name,
-                    phone: data.phone,
-                    contractImage: contractURL,
-                    accountsImage: accountsURL
-                });
-
-                alert("✅ تم حفظ الصور الجديدة بنجاح!");
-                location.reload();
-            } catch (error) {
-                console.error("Error saving images: ", error);
-                alert("❌ حدث خطأ أثناء حفظ الصور. الرجاء المحاولة مرة أخرى.");
-            }
-        };
-
-        // Populate input fields for editing
-        window.editRow = async function (code) {
-            try {
-                const snapshot = await get(child(ref(database), `contracts/${code}`));
-                if (!snapshot.exists()) {
-                    alert("العقد غير موجود للتعديل.");
-                    return;
-                }
-                const data = snapshot.val();
-
-                document.getElementById(`contract-${code}`).value = data.contractImage || '';
-                document.getElementById(`accounts-${code}`).value = data.accountsImage || '';
-                alert("تم تحديث حقول روابط الصور. يمكنك الآن تعديلها والضغط على 'تأكيد'.");
-
-            } catch (error) {
-                console.error("Error editing row: ", error);
-                alert("❌ حدث خطأ أثناء تجهيز التعديل. الرجاء المحاولة مرة أخرى.");
-            }
-        };
-
-        // Delete contract from database
-        window.deleteRow = async function (code) {
-            if (confirm("هل أنت متأكد من حذف هذا العميل من العقود؟")) {
-                try {
-                    await remove(ref(database, `contracts/${code}`));
-                    alert("❌ تم الحذف بنجاح!");
-                    location.reload();
-                } catch (error) {
-                    console.error("Error deleting row: ", error);
-                    alert("❌ حدث خطأ أثناء الحذف. الرجاء المحاولة مرة أخرى.");
-                }
-            }
-        };
-
-        // Return client to 'clients' section
-        window.returnToClients = async function (code) {
-            if (confirm("هل أنت متأكد من إرجاع هذا العميل إلى صفحة العملاء؟")) {
-                try {
-                    const snapshot = await get(child(ref(database), `contracts/${code}`));
-                    if (!snapshot.exists()) {
-                        alert("العقد غير موجود للإرجاع.");
-                        return;
-                    }
-
-                    const data = snapshot.val();
-
-                    // Ensure 'offerImage' and 'drawingImage' are updated if they exist
-                    await set(ref(database, `clients/${code}`), {
-                        name: data.name,
-                        phone: data.phone,
-                        offerImage: data.contractImage || '', // Use contractImage as offerImage
-                        drawingImage: data.accountsImage || '' // Use accountsImage as drawingImage
-                    });
-
-                    await remove(ref(database, `contracts/${code}`));
-                    alert("🔁 تم الإرجاع إلى صفحة العملاء بنجاح!");
-                    location.reload();
-                } catch (error) {
-                    console.error("Error returning to clients: ", error);
-                    alert("❌ حدث خطأ أثناء الإرجاع. الرجاء المحاولة مرة أخرى.");
-                }
-            }
-        };
-    </script>
+    window.deleteRow = async function (code) {
+      if (confirm("هل أنت متأكد من الحذف؟")) {
+        await remove(ref(database, `contracts/${code}`));
+        alert("❌ تم الحذف بنجاح!");
+        location.reload();
+      }
+    };
+  </script>
 </head>
 <body>
-    <div class="container">
-        <a href="index.html" class="home-button">العودة للصفحة الرئيسية</a>
-
-        <h2>📄 صفحة العقود</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>الكود</th>
-                    <th>الاسم</th>
-                    <th>رقم الهاتف</th>
-                    <th>رابط صورة العقد</th>
-                    <th>رابط صورة الحسابات</th>
-                    <th>صورة العقد</th>
-                    <th>صورة الحسابات</th>
-                    <th>التحكم</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody">
-                </tbody>
-        </table>
+  <div class="container">
+    <a href="index.html" class="home-button">العودة للصفحة الرئيسية</a>
+    <h2>📄 صفحة العقود</h2>
+    <div class="search-box">
+      <input type="text" id="search" placeholder="ابحث باسم العميل أو رقم الهاتف...">
     </div>
+    <table>
+      <thead>
+        <tr>
+          <th>الكود</th>
+          <th>الاسم</th>
+          <th>رقم الهاتف</th>
+          <th>رابط صورة العقد</th>
+          <th>رابط صورة الحسابات</th>
+          <th>صورة العقد</th>
+          <th>صورة الحسابات</th>
+          <th>التحكم</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
 </body>
 </html>
