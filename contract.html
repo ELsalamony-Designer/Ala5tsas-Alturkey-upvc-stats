@@ -157,6 +157,27 @@
             background-color: #fff;
         }
 
+        /* Style for the new "Go Home" button */
+        .home-button {
+            display: inline-block;
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 10px 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            border: none; /* Add this to remove default button border */
+            cursor: pointer; /* Add cursor pointer */
+        }
+
+        .home-button:hover {
+            background-color: #1976D2;
+            transform: translateY(-2px);
+        }
+
+
         @media (max-width: 768px) {
             .container {
                 padding: 15px;
@@ -231,7 +252,7 @@
                         const code = childSnap.key;
                         const data = childSnap.val();
 
-                        const row = tableBody.insertRow();
+                        const row = tableBody.insertCell(); // Using insertCell for more structured row creation
                         row.setAttribute('data-code', code); // Add data-code for easier targeting
                         row.innerHTML = `
                             <td data-label="الكود">${code}</td>
@@ -363,6 +384,8 @@
 </head>
 <body>
     <div class="container">
+        <a href="index.html" class="home-button">العودة للصفحة الرئيسية</a>
+
         <h2>📄 صفحة العقود</h2>
         <table>
             <thead>
