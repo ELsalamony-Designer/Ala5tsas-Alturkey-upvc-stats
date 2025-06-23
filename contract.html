@@ -2,55 +2,58 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>العقود المؤكدة</title>
+  <title>العقود</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       font-family: 'Cairo', sans-serif;
-      background: #f2f2f2;
+      background: #f0f2f5;
       margin: 0;
       padding: 20px;
       direction: rtl;
     }
     h1 {
       text-align: center;
-      color: #333;
+      color: #2c3e50;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 20px;
-      background: #fff;
+      background: white;
     }
     th, td {
-      border: 1px solid #ccc;
+      border: 1px solid #ddd;
       padding: 10px;
       text-align: center;
     }
     th {
-      background: #eee;
-    }
-    input[type="text"] {
-      padding: 8px;
-      width: 300px;
-      margin-bottom: 10px;
+      background: #2ecc71;
+      color: white;
     }
     img {
-      max-width: 80px;
+      max-width: 70px;
+      max-height: 70px;
+    }
+    input[type="text"] {
+      padding: 10px;
+      margin: 10px 0;
+      width: 300px;
     }
   </style>
 </head>
 <body>
-<h1>جميع العقود المؤكدة</h1>
+
+<h1>العقود المؤكدة</h1>
 <input type="text" id="searchInput" placeholder="ابحث بالاسم أو الكود">
+
 <table id="contractsTable">
   <thead>
     <tr>
       <th>الكود</th>
       <th>اسم العميل</th>
       <th>رقم الهاتف</th>
-      <th>صورة العقد</th>
-      <th>صورة الحسابات</th>
+      <th>العقد</th>
+      <th>الحسابات</th>
     </tr>
   </thead>
   <tbody></tbody>
@@ -65,7 +68,7 @@
     authDomain: "ala5tsas-alturkey-stats.firebaseapp.com",
     databaseURL: "https://ala5tsas-alturkey-stats-default-rtdb.firebaseio.com",
     projectId: "ala5tsas-alturkey-stats",
-    storageBucket: "ala5tsas-alturkey-stats.firebasestorage.app",
+    storageBucket: "ala5tsas-alturkey-stats.appspot.com",
     messagingSenderId: "649675735929",
     appId: "1:649675735929:web:f90a49614895c6958ea5a8",
     measurementId: "G-X2FHKZT21J"
@@ -77,24 +80,22 @@
   const tbody = document.querySelector("#contractsTable tbody");
   const searchInput = document.getElementById("searchInput");
 
-  function renderContracts(data) {
-    tbody.innerHTML = "";
-    Object.entries(data).forEach(([id, contract]) => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${contract.code}</td>
-        <td>${contract.name}</td>
-        <td>${contract.phone}</td>
-        <td><img src="${contract.contractImg}" alt="صورة العقد" /></td>
-        <td><img src="${contract.accountsImg}" alt="صورة الحسابات" /></td>
-      `;
-      tbody.appendChild(row);
-    });
-  }
-
   onValue(contractsRef, snapshot => {
     const data = snapshot.val();
-    if (data) renderContracts(data);
+    tbody.innerHTML = "";
+    if (data) {
+      Object.entries(data).forEach(([id, contract]) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${contract.code}</td>
+          <td>${contract.name}</td>
+          <td>${contract.phone}</td>
+          <td><img src="${contract.contract}" alt="العقد"></td>
+          <td><img src="${contract.accounts}" alt="الحسابات"></td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
   });
 
   searchInput.addEventListener("input", () => {
