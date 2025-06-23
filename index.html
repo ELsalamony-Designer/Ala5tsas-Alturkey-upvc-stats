@@ -7,64 +7,58 @@
   <style>
     body {
       font-family: 'Cairo', sans-serif;
-      background: #f0f0f0;
-      direction: rtl;
+      background: #f0f2f5;
+      margin: 0;
       padding: 20px;
+      direction: rtl;
     }
     h1 {
       text-align: center;
-      color: #333;
+      color: #2c3e50;
     }
-    form {
+    .form-container {
       background: white;
       padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 0 10px #ccc;
-      margin-bottom: 20px;
-      max-width: 700px;
-      margin: auto;
+      margin-bottom: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-    form input {
-      display: block;
-      width: 100%;
-      margin: 10px 0;
+    input[type="text"] {
       padding: 10px;
+      margin: 5px;
+      width: calc(100% - 22px);
       border: 1px solid #ccc;
-      border-radius: 6px;
+      border-radius: 5px;
     }
-    form button {
-      padding: 10px;
-      width: 100%;
-      background: #28a745;
-      color: white;
+    button {
+      padding: 10px 15px;
+      margin: 5px;
       border: none;
-      border-radius: 6px;
+      border-radius: 5px;
       cursor: pointer;
       font-weight: bold;
     }
+    .add { background: #3498db; color: white; }
+    .edit { background: #f1c40f; }
+    .delete { background: #e74c3c; color: white; }
+    .contract { background: #2ecc71; color: white; }
     table {
       width: 100%;
-      background: white;
       border-collapse: collapse;
-      margin-top: 20px;
+      background: white;
     }
     th, td {
-      border: 1px solid #ccc;
+      border: 1px solid #ddd;
       padding: 10px;
       text-align: center;
     }
     th {
-      background: #eee;
+      background: #2980b9;
+      color: white;
     }
-    .edit { background: #ffc107; color: black; }
-    .delete { background: #dc3545; color: white; }
-    .contract { background: #007bff; color: white; }
-    button.action {
-      margin: 2px;
-      padding: 6px 10px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
+    img {
+      max-width: 70px;
+      max-height: 70px;
     }
   </style>
 </head>
@@ -72,23 +66,24 @@
 
 <h1>نظام إدارة العملاء</h1>
 
-<form id="clientForm">
-  <input type="text" id="name" placeholder="اسم العميل" required>
-  <input type="text" id="phone" placeholder="رقم الهاتف" required>
-  <input type="url" id="estimate" placeholder="رابط صورة عرض السعر" required>
-  <input type="url" id="drawings" placeholder="رابط صورة الرسومات" required>
-  <button type="submit">➕ إضافة عميل</button>
-</form>
+<div class="form-container">
+  <input type="text" id="clientName" placeholder="اسم العميل">
+  <input type="text" id="clientPhone" placeholder="رقم الهاتف">
+  <input type="text" id="estimateURL" placeholder="رابط صورة عرض السعر">
+  <input type="text" id="drawingsURL" placeholder="رابط صورة الرسومات">
+  <button class="add" onclick="addClient()">➕ إضافة عميل</button>
+</div>
 
+<input type="text" id="searchInput" placeholder="ابحث بالاسم أو الكود">
 <table id="clientsTable">
   <thead>
     <tr>
       <th>الكود</th>
-      <th>الاسم</th>
+      <th>اسم العميل</th>
       <th>رقم الهاتف</th>
       <th>عرض السعر</th>
       <th>الرسومات</th>
-      <th>خيارات</th>
+      <th>الخيارات</th>
     </tr>
   </thead>
   <tbody></tbody>
@@ -96,9 +91,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-  import {
-    getDatabase, ref, push, onValue, set, remove, get, child
-  } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+  import { getDatabase, ref, onValue, remove, set, push, get, child } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDgOby-sJuIUs8iCErmqtiMbqMuND5ZtCo",
@@ -114,19 +107,20 @@
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
   const clientsRef = ref(db, 'clients');
+  const contractsRef = ref(db, 'contracts');
 
-  const form = document.getElementById("clientForm");
   const tbody = document.querySelector("#clientsTable tbody");
+  const searchInput = document.getElementById("searchInput");
 
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const name = document.getElementById("name").value;
-    const phone = document.getElementById("phone").value;
-    const estimate = document.getElementById("estimate").value;
-    const drawings = document.getElementById("drawings").value;
+  window.addClient = () => {
+    const name = document.getElementById("clientName").value;
+    const phone = document.getElementById("clientPhone").value;
+    const estimate = document.getElementById("estimateURL").value;
+    const drawings = document.getElementById("drawingsURL").value;
+    if (!name || !phone || !estimate || !drawings) return alert("يرجى تعبئة جميع الحقول");
 
     const newRef = push(clientsRef);
-    await set(newRef, {
+    set(newRef, {
       code: newRef.key,
       name,
       phone,
@@ -134,10 +128,13 @@
       drawings
     });
 
-    form.reset();
-  });
+    document.getElementById("clientName").value = "";
+    document.getElementById("clientPhone").value = "";
+    document.getElementById("estimateURL").value = "";
+    document.getElementById("drawingsURL").value = "";
+  };
 
-  onValue(clientsRef, (snapshot) => {
+  onValue(clientsRef, snapshot => {
     const data = snapshot.val();
     tbody.innerHTML = "";
     if (data) {
@@ -147,12 +144,12 @@
           <td>${client.code}</td>
           <td>${client.name}</td>
           <td>${client.phone}</td>
-          <td><img src="${client.estimate}" width="60"></td>
-          <td><img src="${client.drawings}" width="60"></td>
+          <td><img src="${client.estimate}" alt="عرض السعر"></td>
+          <td><img src="${client.drawings}" alt="الرسومات"></td>
           <td>
-            <button class="action edit" onclick="editClient('${id}')">✏️</button>
-            <button class="action delete" onclick="deleteClient('${id}')">🗑️</button>
-            <button class="action contract" onclick="confirmContract('${id}')">📄</button>
+            <button class="edit" onclick="editClient('${id}')">تعديل</button>
+            <button class="delete" onclick="deleteClient('${id}')">حذف</button>
+            <button class="contract" onclick="confirmContract('${id}')">تأكيد العقد</button>
           </td>
         `;
         tbody.appendChild(tr);
@@ -160,21 +157,14 @@
     }
   });
 
-  window.deleteClient = (id) => {
-    if (confirm("هل تريد حذف هذا العميل؟")) {
-      remove(ref(db, 'clients/' + id));
-    }
-  };
-
   window.editClient = async (id) => {
-    const snapshot = await get(child(ref(db), `clients/${id}`));
+    const snapshot = await get(child(ref(db), 'clients/' + id));
     if (snapshot.exists()) {
       const client = snapshot.val();
-      const name = prompt("اسم جديد:", client.name);
-      const phone = prompt("رقم جديد:", client.phone);
+      const name = prompt("الاسم:", client.name);
+      const phone = prompt("رقم الهاتف:", client.phone);
       const estimate = prompt("رابط عرض السعر:", client.estimate);
       const drawings = prompt("رابط الرسومات:", client.drawings);
-
       if (name && phone && estimate && drawings) {
         set(ref(db, 'clients/' + id), {
           code: id,
@@ -187,8 +177,14 @@
     }
   };
 
+  window.deleteClient = (id) => {
+    if (confirm("هل أنت متأكد من الحذف؟")) {
+      remove(ref(db, 'clients/' + id));
+    }
+  };
+
   window.confirmContract = async (id) => {
-    const snapshot = await get(child(ref(db), `clients/${id}`));
+    const snapshot = await get(child(ref(db), 'clients/' + id));
     if (snapshot.exists()) {
       const client = snapshot.val();
       const contract = prompt("رابط صورة العقد:");
@@ -201,12 +197,20 @@
           contract,
           accounts
         });
-        alert("✅ تم نقل العميل للعقودات.");
-        window.location.href = "contract.html";
+        window.location.href = 'contract.html';
       }
     }
   };
-</script>
 
+  searchInput.addEventListener("input", () => {
+    const filter = searchInput.value.toLowerCase();
+    const rows = tbody.querySelectorAll("tr");
+    rows.forEach(row => {
+      const name = row.children[1].textContent.toLowerCase();
+      const code = row.children[0].textContent.toLowerCase();
+      row.style.display = name.includes(filter) || code.includes(filter) ? "" : "none";
+    });
+  });
+</script>
 </body>
 </html>
