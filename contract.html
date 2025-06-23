@@ -1,57 +1,47 @@
-<!-- contract.html -->
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8" />
-  <title>العقود | إدارة العملاء</title>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js"></script>
-  <script src="firebase-config.js"></script>
-  <style>
-    body { font-family: 'Arial'; direction: rtl; padding: 20px; background: #f0f0f0; }
-    table { width: 100%; border-collapse: collapse; background: white; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-    img { max-width: 100px; max-height: 80px; }
-  </style>
+  <meta charset="UTF-8">
+  <title>العقود</title>
+  <link rel="stylesheet" href="style.css" />
+  <script type="module">
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { database } from './firebase-config.js';
+
+    const contractTable = document.getElementById("contractTable");
+
+    onValue(ref(database, "contracts"), (snapshot) => {
+      contractTable.innerHTML = "";
+      snapshot.forEach((child) => {
+        const code = child.key;
+        const data = child.val();
+
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${code}</td>
+          <td>${data.name}</td>
+          <td>${data.phone}</td>
+          <td><img src="${data.contractImage}" /></td>
+          <td><img src="${data.accountsImage}" /></td>
+        `;
+        contractTable.appendChild(row);
+      });
+    });
+  </script>
 </head>
 <body>
-
-<h2>العقود المؤكدة</h2>
-<table>
-  <thead>
-    <tr>
-      <th>الكود</th>
-      <th>اسم العميل</th>
-      <th>رقم العميل</th>
-      <th>صورة العقد</th>
-      <th>صورة الحسابات</th>
-    </tr>
-  </thead>
-  <tbody id="contractTable">
-    <!-- هيتملأ تلقائي -->
-  </tbody>
-</table>
-
-<script>
-firebase.database().ref("contracts").on("value", (snapshot) => {
-  const table = document.getElementById("contractTable");
-  table.innerHTML = "";
-  snapshot.forEach(child => {
-    const code = child.key;
-    const data = child.val();
-    const row = document.createElement("tr");
-
-    row.innerHTML = `
-      <td>${code}</td>
-      <td>${data.name}</td>
-      <td>${data.phone}</td>
-      <td><img src="${data.contractImage}" /></td>
-      <td><img src="${data.accountsImage}" /></td>
-    `;
-
-    table.appendChild(row);
-  });
-});
-</script>
+  <h2>صفحة العقود</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>الكود</th>
+        <th>اسم العميل</th>
+        <th>رقم العميل</th>
+        <th>العقد</th>
+        <th>الحسابات</th>
+      </tr>
+    </thead>
+    <tbody id="contractTable"></tbody>
+  </table>
 </body>
 </html>
