@@ -2,97 +2,110 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>صفحة العقد</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&display=swap" rel="stylesheet">
+  <title>العقود المؤكدة</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       font-family: 'Cairo', sans-serif;
-      background-color: #f8f8f8;
-      padding: 40px;
-      text-align: center;
-    }
-    .container {
-      background: white;
-      max-width: 700px;
-      margin: auto;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      background: #f2f2f2;
+      margin: 0;
+      padding: 20px;
+      direction: rtl;
     }
     h1 {
-      color: #34495e;
+      text-align: center;
+      color: #333;
     }
-    input {
-      display: block;
-      margin: 15px auto;
-      padding: 10px;
-      width: 80%;
-      border-radius: 5px;
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: #fff;
+    }
+    th, td {
       border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background: #eee;
+    }
+    input[type="text"] {
+      padding: 8px;
+      width: 300px;
+      margin-bottom: 10px;
     }
     img {
-      width: 150px;
-      margin-top: 15px;
+      max-width: 80px;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>معلومات العقد</h1>
-    <p>الكود: <span id="clientId"></span></p>
-    <p>اسم العميل: <span id="clientName"></span></p>
-    <p>رقم الهاتف: <span id="clientPhone"></span></p>
+<h1>جميع العقود المؤكدة</h1>
+<input type="text" id="searchInput" placeholder="ابحث بالاسم أو الكود">
+<table id="contractsTable">
+  <thead>
+    <tr>
+      <th>الكود</th>
+      <th>اسم العميل</th>
+      <th>رقم الهاتف</th>
+      <th>صورة العقد</th>
+      <th>صورة الحسابات</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
 
-    <h3>صورة العقد</h3>
-    <input type="url" id="contractImage" placeholder="رابط صورة العقد">
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
-    <h3>صورة الحسابات</h3>
-    <input type="url" id="accountsImage" placeholder="رابط صورة الحسابات">
+  const firebaseConfig = {
+    apiKey: "AIzaSyDgOby-sJuIUs8iCErmqtiMbqMuND5ZtCo",
+    authDomain: "ala5tsas-alturkey-stats.firebaseapp.com",
+    databaseURL: "https://ala5tsas-alturkey-stats-default-rtdb.firebaseio.com",
+    projectId: "ala5tsas-alturkey-stats",
+    storageBucket: "ala5tsas-alturkey-stats.firebasestorage.app",
+    messagingSenderId: "649675735929",
+    appId: "1:649675735929:web:f90a49614895c6958ea5a8",
+    measurementId: "G-X2FHKZT21J"
+  };
 
-    <button onclick="saveContract()">حفظ العقد</button>
-  </div>
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const contractsRef = ref(db, 'contracts');
+  const tbody = document.querySelector("#contractsTable tbody");
+  const searchInput = document.getElementById("searchInput");
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
+  function renderContracts(data) {
+    tbody.innerHTML = "";
+    Object.entries(data).forEach(([id, contract]) => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${contract.code}</td>
+        <td>${contract.name}</td>
+        <td>${contract.phone}</td>
+        <td><img src="${contract.contractImg}" alt="صورة العقد" /></td>
+        <td><img src="${contract.accountsImg}" alt="صورة الحسابات" /></td>
+      `;
+      tbody.appendChild(row);
+    });
+  }
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDgOby-sJuIUs8iCErmqtiMbqMuND5ZtCo",
-      authDomain: "ala5tsas-alturkey-stats.firebaseapp.com",
-      databaseURL: "https://ala5tsas-alturkey-stats-default-rtdb.firebaseio.com",
-      projectId: "ala5tsas-alturkey-stats",
-      storageBucket: "ala5tsas-alturkey-stats.appspot.com",
-      messagingSenderId: "649675735929",
-      appId: "1:649675735929:web:f90a49614895c6958ea5a8",
-      measurementId: "G-X2FHKZT21J"
-    };
+  onValue(contractsRef, snapshot => {
+    const data = snapshot.val();
+    if (data) renderContracts(data);
+  });
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    const clientId = localStorage.getItem("contract_id");
-    const name = localStorage.getItem("contract_name");
-    const phone = localStorage.getItem("contract_phone");
-
-    document.getElementById("clientId").textContent = clientId;
-    document.getElementById("clientName").textContent = name;
-    document.getElementById("clientPhone").textContent = phone;
-
-    window.saveContract = () => {
-      const contractImage = document.getElementById("contractImage").value;
-      const accountsImage = document.getElementById("accountsImage").value;
-
-      const contractRef = ref(db, `contracts/${clientId}`);
-      set(contractRef, {
-        name,
-        phone,
-        contract: contractImage,
-        accounts: accountsImage
-      });
-
-      alert("تم حفظ العقد بنجاح!");
-    };
-  </script>
+  searchInput.addEventListener("input", () => {
+    const filter = searchInput.value.toLowerCase();
+    const rows = tbody.querySelectorAll("tr");
+    rows.forEach(row => {
+      const name = row.children[1].textContent.toLowerCase();
+      const code = row.children[0].textContent.toLowerCase();
+      row.style.display = name.includes(filter) || code.includes(filter) ? "" : "none";
+    });
+  });
+</script>
 </body>
 </html>
-
