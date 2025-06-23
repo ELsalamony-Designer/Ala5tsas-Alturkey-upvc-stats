@@ -1,112 +1,57 @@
+<!-- contract.html -->
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <title>العقود</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <title>العقود | إدارة العملاء</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js"></script>
+  <script src="firebase-config.js"></script>
   <style>
-    body {
-      font-family: 'Cairo', sans-serif;
-      background: #f0f2f5;
-      margin: 0;
-      padding: 20px;
-      direction: rtl;
-    }
-    h1 {
-      text-align: center;
-      color: #2c3e50;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-    }
-    th, td {
-      border: 1px solid #ddd;
-      padding: 10px;
-      text-align: center;
-    }
-    th {
-      background: #2ecc71;
-      color: white;
-    }
-    img {
-      max-width: 70px;
-      max-height: 70px;
-    }
-    input[type="text"] {
-      padding: 10px;
-      margin: 10px 0;
-      width: 300px;
-    }
+    body { font-family: 'Arial'; direction: rtl; padding: 20px; background: #f0f0f0; }
+    table { width: 100%; border-collapse: collapse; background: white; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    img { max-width: 100px; max-height: 80px; }
   </style>
 </head>
 <body>
 
-<h1>العقود المؤكدة</h1>
-<input type="text" id="searchInput" placeholder="ابحث بالاسم أو الكود">
-
-<table id="contractsTable">
+<h2>العقود المؤكدة</h2>
+<table>
   <thead>
     <tr>
       <th>الكود</th>
       <th>اسم العميل</th>
-      <th>رقم الهاتف</th>
-      <th>العقد</th>
-      <th>الحسابات</th>
+      <th>رقم العميل</th>
+      <th>صورة العقد</th>
+      <th>صورة الحسابات</th>
     </tr>
   </thead>
-  <tbody></tbody>
+  <tbody id="contractTable">
+    <!-- هيتملأ تلقائي -->
+  </tbody>
 </table>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+<script>
+firebase.database().ref("contracts").on("value", (snapshot) => {
+  const table = document.getElementById("contractTable");
+  table.innerHTML = "";
+  snapshot.forEach(child => {
+    const code = child.key;
+    const data = child.val();
+    const row = document.createElement("tr");
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyDgOby-sJuIUs8iCErmqtiMbqMuND5ZtCo",
-    authDomain: "ala5tsas-alturkey-stats.firebaseapp.com",
-    databaseURL: "https://ala5tsas-alturkey-stats-default-rtdb.firebaseio.com",
-    projectId: "ala5tsas-alturkey-stats",
-    storageBucket: "ala5tsas-alturkey-stats.appspot.com",
-    messagingSenderId: "649675735929",
-    appId: "1:649675735929:web:f90a49614895c6958ea5a8",
-    measurementId: "G-X2FHKZT21J"
-  };
+    row.innerHTML = `
+      <td>${code}</td>
+      <td>${data.name}</td>
+      <td>${data.phone}</td>
+      <td><img src="${data.contractImage}" /></td>
+      <td><img src="${data.accountsImage}" /></td>
+    `;
 
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-  const contractsRef = ref(db, 'contracts');
-  const tbody = document.querySelector("#contractsTable tbody");
-  const searchInput = document.getElementById("searchInput");
-
-  onValue(contractsRef, snapshot => {
-    const data = snapshot.val();
-    tbody.innerHTML = "";
-    if (data) {
-      Object.entries(data).forEach(([id, contract]) => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${contract.code}</td>
-          <td>${contract.name}</td>
-          <td>${contract.phone}</td>
-          <td><img src="${contract.contract}" alt="العقد"></td>
-          <td><img src="${contract.accounts}" alt="الحسابات"></td>
-        `;
-        tbody.appendChild(row);
-      });
-    }
+    table.appendChild(row);
   });
-
-  searchInput.addEventListener("input", () => {
-    const filter = searchInput.value.toLowerCase();
-    const rows = tbody.querySelectorAll("tr");
-    rows.forEach(row => {
-      const name = row.children[1].textContent.toLowerCase();
-      const code = row.children[0].textContent.toLowerCase();
-      row.style.display = name.includes(filter) || code.includes(filter) ? "" : "none";
-    });
-  });
+});
 </script>
 </body>
 </html>
