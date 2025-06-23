@@ -2,88 +2,47 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>نظام إدارة العملاء</title>
+  <title>إدارة العملاء</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body {
-      font-family: 'Cairo', sans-serif;
-      background: #f0f2f5;
-      margin: 0;
-      padding: 20px;
-      direction: rtl;
-    }
-    h1 {
-      text-align: center;
-      color: #2c3e50;
-    }
-    .form-container {
-      background: white;
-      padding: 20px;
-      margin-bottom: 30px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    input[type="text"] {
-      padding: 10px;
-      margin: 5px;
-      width: calc(100% - 22px);
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    button {
-      padding: 10px 15px;
-      margin: 5px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    .add { background: #3498db; color: white; }
-    .edit { background: #f1c40f; }
-    .delete { background: #e74c3c; color: white; }
-    .contract { background: #2ecc71; color: white; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-    }
-    th, td {
-      border: 1px solid #ddd;
-      padding: 10px;
-      text-align: center;
-    }
-    th {
-      background: #2980b9;
-      color: white;
-    }
-    img {
-      max-width: 70px;
-      max-height: 70px;
-    }
+    body { font-family: 'Cairo', sans-serif; background: #f2f2f2; direction: rtl; padding: 20px; }
+    h1 { text-align: center; color: #333; }
+    form { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 0 10px #ccc; max-width: 700px; margin: auto 0 20px; }
+    form input, form button { display: block; width: 100%; margin: 10px 0; padding: 10px; border-radius: 6px; }
+    form button { background: #28a745; color: white; border: none; font-weight: bold; cursor: pointer; }
+    table { width: 100%; background: white; border-collapse: collapse; margin-bottom: 20px; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+    th { background: #eee; }
+    button.action { margin: 2px; padding: 6px 10px; border: none; border-radius: 4px; cursor: pointer; }
+    .edit { background: #ffc107; color: black; }
+    .delete { background: #dc3545; color: white; }
+    .contract { background: #007bff; color: white; }
+    #searchInput { width: calc(100% - 22px); padding: 10px; margin: auto 0 20px; display: block; max-width: 700px; }
   </style>
 </head>
 <body>
 
 <h1>نظام إدارة العملاء</h1>
 
-<div class="form-container">
-  <input type="text" id="clientName" placeholder="اسم العميل">
-  <input type="text" id="clientPhone" placeholder="رقم الهاتف">
-  <input type="text" id="estimateURL" placeholder="رابط صورة عرض السعر">
-  <input type="text" id="drawingsURL" placeholder="رابط صورة الرسومات">
-  <button class="add" onclick="addClient()">➕ إضافة عميل</button>
-</div>
+<form id="clientForm">
+  <input type="text" id="name" placeholder="اسم العميل" required>
+  <input type="text" id="phone" placeholder="رقم الهاتف" required>
+  <input type="url" id="estimate" placeholder="رابط صورة عرض السعر" required>
+  <input type="url" id="drawings" placeholder="رابط صورة الرسومات" required>
+  <button type="submit">➕ إضافة عميل</button>
+</form>
 
 <input type="text" id="searchInput" placeholder="ابحث بالاسم أو الكود">
+
 <table id="clientsTable">
   <thead>
     <tr>
       <th>الكود</th>
-      <th>اسم العميل</th>
+      <th>الاسم</th>
       <th>رقم الهاتف</th>
       <th>عرض السعر</th>
       <th>الرسومات</th>
-      <th>الخيارات</th>
+      <th>خيارات</th>
     </tr>
   </thead>
   <tbody></tbody>
@@ -91,48 +50,39 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-  import { getDatabase, ref, onValue, remove, set, push, get, child } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+  import { getDatabase, ref, push, set, onValue, remove, get, child } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBFfikBhlWhcMUK50w3-GvaanceJjuQSBs",
     authDomain: "ala5tsas-alturkey-stats-56299.firebaseapp.com",
     databaseURL: "https://ala5tsas-alturkey-stats-56299-default-rtdb.firebaseio.com",
     projectId: "ala5tsas-alturkey-stats-56299",
-    storageBucket: "ala5tsas-alturkey-stats-56299.appspot.com",
+    storageBucket: "ala5tsas-alturkey-stats-56299.firebasestorage.app",
     messagingSenderId: "432379375706",
     appId: "1:432379375706:web:843fc3cb6c445c56a3a863",
     measurementId: "G-CHYVT4EYFL"
   };
-
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
   const clientsRef = ref(db, 'clients');
   const contractsRef = ref(db, 'contracts');
 
+  const form = document.getElementById("clientForm");
   const tbody = document.querySelector("#clientsTable tbody");
   const searchInput = document.getElementById("searchInput");
 
-  window.addClient = () => {
-    const name = document.getElementById("clientName").value;
-    const phone = document.getElementById("clientPhone").value;
-    const estimate = document.getElementById("estimateURL").value;
-    const drawings = document.getElementById("drawingsURL").value;
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    const name = document.getElementById("name").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+    const estimate = document.getElementById("estimate").value.trim();
+    const drawings = document.getElementById("drawings").value.trim();
     if (!name || !phone || !estimate || !drawings) return alert("يرجى تعبئة جميع الحقول");
 
     const newRef = push(clientsRef);
-    set(newRef, {
-      code: newRef.key,
-      name,
-      phone,
-      estimate,
-      drawings
-    });
-
-    document.getElementById("clientName").value = "";
-    document.getElementById("clientPhone").value = "";
-    document.getElementById("estimateURL").value = "";
-    document.getElementById("drawingsURL").value = "";
-  };
+    await set(newRef, { code: newRef.key, name, phone, estimate, drawings });
+    form.reset();
+  });
 
   onValue(clientsRef, snapshot => {
     const data = snapshot.val();
@@ -144,73 +94,58 @@
           <td>${client.code}</td>
           <td>${client.name}</td>
           <td>${client.phone}</td>
-          <td><img src="${client.estimate}" alt="عرض السعر"></td>
-          <td><img src="${client.drawings}" alt="الرسومات"></td>
+          <td><img src="${client.estimate}" width="60"></td>
+          <td><img src="${client.drawings}" width="60"></td>
           <td>
-            <button class="edit" onclick="editClient('${id}')">تعديل</button>
-            <button class="delete" onclick="deleteClient('${id}')">حذف</button>
-            <button class="contract" onclick="confirmContract('${id}')">تأكيد العقد</button>
-          </td>
-        `;
+            <button class="action edit" onclick="editClient('${id}')">✏️</button>
+            <button class="action delete" onclick="deleteClient('${id}')">🗑️</button>
+            <button class="action contract" onclick="confirmContract('${id}')">📄</button>
+          </td>`;
         tbody.appendChild(tr);
       });
     }
   });
 
-  window.editClient = async (id) => {
-    const snapshot = await get(child(ref(db), 'clients/' + id));
-    if (snapshot.exists()) {
-      const client = snapshot.val();
-      const name = prompt("الاسم:", client.name);
-      const phone = prompt("رقم الهاتف:", client.phone);
-      const estimate = prompt("رابط عرض السعر:", client.estimate);
-      const drawings = prompt("رابط الرسومات:", client.drawings);
-      if (name && phone && estimate && drawings) {
-        set(ref(db, 'clients/' + id), {
-          code: id,
-          name,
-          phone,
-          estimate,
-          drawings
-        });
-      }
+  window.deleteClient = id => {
+    if (confirm("هل تريد حذف هذا العميل؟")) remove(child(clientsRef, id));
+  };
+
+  window.editClient = async id => {
+    const snap = await get(child(ref(db), `clients/${id}`));
+    if (!snap.exists()) return alert("العميل غير موجود");
+    const c = snap.val();
+    const name = prompt("اسم جديد:", c.name);
+    const phone = prompt("رقم جديد:", c.phone);
+    const estimate = prompt("رابط عرض السعر:", c.estimate);
+    const drawings = prompt("رابط الرسومات:", c.drawings);
+    if (name && phone && estimate && drawings) {
+      set(child(ref(db), `clients/${id}`), { code: id, name, phone, estimate, drawings });
     }
   };
 
-  window.deleteClient = (id) => {
-    if (confirm("هل أنت متأكد من الحذف؟")) {
-      remove(ref(db, 'clients/' + id));
-    }
-  };
-
-  window.confirmContract = async (id) => {
-    const snapshot = await get(child(ref(db), 'clients/' + id));
-    if (snapshot.exists()) {
-      const client = snapshot.val();
-      const contract = prompt("رابط صورة العقد:");
-      const accounts = prompt("رابط صورة الحسابات:");
-      if (contract && accounts) {
-        await set(ref(db, 'contracts/' + id), {
-          code: client.code,
-          name: client.name,
-          phone: client.phone,
-          contract,
-          accounts
-        });
-        window.location.href = 'contract.html';
-      }
-    }
+  window.confirmContract = async id => {
+    const snap = await get(child(ref(db), `clients/${id}`));
+    if (!snap.exists()) return alert("العميل غير موجود");
+    const c = snap.val();
+    const contract = prompt("رابط صورة العقد:");
+    const accounts = prompt("رابط صورة الحسابات:");
+    if (!contract || !accounts) return alert("يرجى إدخال كل الروابط");
+    await set(child(ref(db), `contracts/${id}`), {
+      code: c.code, name: c.name, phone: c.phone, contract, accounts
+    });
+    alert("تم تأكيد العقد وانتقالك لصفحة العقود");
+    window.location.href = "contract.html";
   };
 
   searchInput.addEventListener("input", () => {
     const filter = searchInput.value.toLowerCase();
-    const rows = tbody.querySelectorAll("tr");
-    rows.forEach(row => {
-      const name = row.children[1].textContent.toLowerCase();
-      const code = row.children[0].textContent.toLowerCase();
-      row.style.display = name.includes(filter) || code.includes(filter) ? "" : "none";
+    document.querySelectorAll("#clientsTable tbody tr").forEach(row => {
+      const t0 = row.children[0].textContent.toLowerCase();
+      const t1 = row.children[1].textContent.toLowerCase();
+      row.style.display = t0.includes(filter) || t1.includes(filter) ? "" : "none";
     });
   });
 </script>
+
 </body>
 </html>
