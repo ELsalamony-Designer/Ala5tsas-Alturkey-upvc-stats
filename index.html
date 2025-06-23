@@ -7,7 +7,7 @@
   <style>
     body {
       font-family: 'Cairo', sans-serif;
-      background: #f2f2f2;
+      background: #f4f6f9;
       margin: 0;
       padding: 20px;
       direction: rtl;
@@ -15,57 +15,64 @@
     h1 {
       text-align: center;
       color: #333;
+      margin-bottom: 30px;
+    }
+    .form-container {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      max-width: 700px;
+      margin: 0 auto 20px;
+    }
+    .form-container input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    .form-container button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .form-container button:hover {
+      background-color: #0056b3;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 20px;
       background: #fff;
+      margin-top: 20px;
     }
     th, td {
-      border: 1px solid #ccc;
+      border: 1px solid #ddd;
       padding: 10px;
       text-align: center;
     }
     th {
-      background: #eee;
-    }
-    button {
-      padding: 6px 12px;
-      margin: 2px;
-      cursor: pointer;
-      font-weight: bold;
+      background-color: #f1f1f1;
     }
     .edit { background-color: #ffc107; }
     .delete { background-color: #dc3545; color: white; }
     .contract { background-color: #28a745; color: white; }
-    input[type="text"], input[type="url"] {
-      padding: 8px;
-      width: 300px;
-      margin-bottom: 10px;
-      display: block;
-    }
-    form {
-      background: #fff;
-      padding: 15px;
-      border: 1px solid #ccc;
-      margin-bottom: 20px;
-    }
   </style>
 </head>
 <body>
 
-<h1>جدول العملاء</h1>
+<h1>نموذج إضافة عميل</h1>
 
-<form id="addClientForm">
-  <h2>إضافة عميل جديد</h2>
-  <input type="text" id="code" placeholder="كود العميل" required>
-  <input type="text" id="name" placeholder="اسم العميل" required>
-  <input type="text" id="phone" placeholder="رقم الهاتف" required>
-  <input type="url" id="estimate" placeholder="رابط صورة عرض السعر" required>
-  <input type="url" id="drawings" placeholder="رابط صورة الرسومات" required>
-  <button type="submit">➕ إضافة العميل</button>
-</form>
+<div class="form-container">
+  <input type="text" id="name" placeholder="اسم العميل">
+  <input type="text" id="phone" placeholder="رقم الهاتف">
+  <input type="url" id="estimate" placeholder="رابط عرض السعر (URL)">
+  <input type="url" id="drawings" placeholder="رابط الرسومات (URL)">
+  <button id="addClient">➕ إضافة العميل</button>
+</div>
 
 <input type="text" id="searchInput" placeholder="ابحث بالاسم أو الكود">
 <table id="clientsTable">
@@ -84,14 +91,14 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-  import { getDatabase, ref, onValue, remove, set, push, get, child } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+  import { getDatabase, ref, onValue, push, remove, set } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDgOby-sJuIUs8iCErmqtiMbqMuND5ZtCo",
     authDomain: "ala5tsas-alturkey-stats.firebaseapp.com",
     databaseURL: "https://ala5tsas-alturkey-stats-default-rtdb.firebaseio.com",
     projectId: "ala5tsas-alturkey-stats",
-    storageBucket: "ala5tsas-alturkey-stats.firebasestorage.app",
+    storageBucket: "ala5tsas-alturkey-stats.appspot.com",
     messagingSenderId: "649675735929",
     appId: "1:649675735929:web:f90a49614895c6958ea5a8",
     measurementId: "G-X2FHKZT21J"
@@ -100,11 +107,38 @@
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
   const clientsRef = ref(db, 'clients');
-  const contractsRef = ref(db, 'contracts');
 
   const tbody = document.querySelector("#clientsTable tbody");
   const searchInput = document.getElementById("searchInput");
 
+  // Add client
+  document.getElementById("addClient").addEventListener("click", async () => {
+    const name = document.getElementById("name").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+    const estimate = document.getElementById("estimate").value.trim();
+    const drawings = document.getElementById("drawings").value.trim();
+
+    if (!name || !phone || !estimate || !drawings) {
+      alert("يرجى ملء جميع الحقول");
+      return;
+    }
+
+    const newClientRef = push(clientsRef);
+    const newClient = {
+      code: newClientRef.key,
+      name,
+      phone,
+      estimate,
+      drawings
+    };
+    await set(newClientRef, newClient);
+    document.getElementById("name").value = "";
+    document.getElementById("phone").value = "";
+    document.getElementById("estimate").value = "";
+    document.getElementById("drawings").value = "";
+  });
+
+  // Display clients
   function renderClients(data) {
     tbody.innerHTML = "";
     Object.entries(data).forEach(([id, client]) => {
@@ -153,44 +187,23 @@
   };
 
   window.confirmContract = async (id) => {
-    const snap = await get(child(ref(db), 'clients/' + id));
+    const snap = await import("https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js").then(mod => mod.get(ref(db, 'clients/' + id)));
     if (snap.exists()) {
       const client = snap.val();
       const contract = prompt("رابط صورة العقد:");
       const accounts = prompt("رابط صورة الحسابات:");
-      await set(ref(db, 'contracts/' + id), {
-        code: client.code,
-        name: client.name,
-        phone: client.phone,
-        contract,
-        accounts
-      });
-      window.location.href = "contract.html";
+      if (contract && accounts) {
+        await set(ref(db, 'contracts/' + id), {
+          code: client.code,
+          name: client.name,
+          phone: client.phone,
+          contract,
+          accounts
+        });
+        window.location.href = "contract.html";
+      }
     }
   };
-
-  const addClientForm = document.getElementById("addClientForm");
-  addClientForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const code = document.getElementById("code").value.trim();
-    const name = document.getElementById("name").value.trim();
-    const phone = document.getElementById("phone").value.trim();
-    const estimate = document.getElementById("estimate").value.trim();
-    const drawings = document.getElementById("drawings").value.trim();
-
-    if (code && name && phone && estimate && drawings) {
-      set(ref(db, 'clients/' + code), {
-        code,
-        name,
-        phone,
-        estimate,
-        drawings
-      }).then(() => {
-        addClientForm.reset();
-        alert("تم إضافة العميل بنجاح");
-      });
-    }
-  });
 
   searchInput.addEventListener("input", () => {
     const filter = searchInput.value.toLowerCase();
