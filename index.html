@@ -39,16 +39,34 @@
     .edit { background-color: #ffc107; }
     .delete { background-color: #dc3545; color: white; }
     .contract { background-color: #28a745; color: white; }
-    input[type="text"] {
+    input[type="text"], input[type="url"] {
       padding: 8px;
       width: 300px;
       margin-bottom: 10px;
+      display: block;
+    }
+    form {
+      background: #fff;
+      padding: 15px;
+      border: 1px solid #ccc;
+      margin-bottom: 20px;
     }
   </style>
 </head>
 <body>
 
 <h1>جدول العملاء</h1>
+
+<form id="addClientForm">
+  <h2>إضافة عميل جديد</h2>
+  <input type="text" id="code" placeholder="كود العميل" required>
+  <input type="text" id="name" placeholder="اسم العميل" required>
+  <input type="text" id="phone" placeholder="رقم الهاتف" required>
+  <input type="url" id="estimate" placeholder="رابط صورة عرض السعر" required>
+  <input type="url" id="drawings" placeholder="رابط صورة الرسومات" required>
+  <button type="submit">➕ إضافة العميل</button>
+</form>
+
 <input type="text" id="searchInput" placeholder="ابحث بالاسم أو الكود">
 <table id="clientsTable">
   <thead>
@@ -66,7 +84,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-  import { getDatabase, ref, onValue, remove, set, push } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+  import { getDatabase, ref, onValue, remove, set, push, get, child } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDgOby-sJuIUs8iCErmqtiMbqMuND5ZtCo",
@@ -135,21 +153,44 @@
   };
 
   window.confirmContract = async (id) => {
-    const snapshot = await import("https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js").then(module =>
-      module.get(ref(db, 'clients/' + id))
-    );
-    if (snapshot.exists()) {
-      const client = snapshot.val();
+    const snap = await get(child(ref(db), 'clients/' + id));
+    if (snap.exists()) {
+      const client = snap.val();
+      const contract = prompt("رابط صورة العقد:");
+      const accounts = prompt("رابط صورة الحسابات:");
       await set(ref(db, 'contracts/' + id), {
         code: client.code,
         name: client.name,
         phone: client.phone,
-        contract: prompt("رابط صورة العقد:"),
-        accounts: prompt("رابط صورة الحسابات:")
+        contract,
+        accounts
       });
       window.location.href = "contract.html";
     }
   };
+
+  const addClientForm = document.getElementById("addClientForm");
+  addClientForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const code = document.getElementById("code").value.trim();
+    const name = document.getElementById("name").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+    const estimate = document.getElementById("estimate").value.trim();
+    const drawings = document.getElementById("drawings").value.trim();
+
+    if (code && name && phone && estimate && drawings) {
+      set(ref(db, 'clients/' + code), {
+        code,
+        name,
+        phone,
+        estimate,
+        drawings
+      }).then(() => {
+        addClientForm.reset();
+        alert("تم إضافة العميل بنجاح");
+      });
+    }
+  });
 
   searchInput.addEventListener("input", () => {
     const filter = searchInput.value.toLowerCase();
