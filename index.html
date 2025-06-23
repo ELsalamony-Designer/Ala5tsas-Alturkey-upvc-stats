@@ -1,78 +1,66 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>جدول العملاء</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <title>لوحة بيانات العملاء</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&display=swap" rel="stylesheet">
   <style>
     body {
       font-family: 'Cairo', sans-serif;
-      background: #f2f2f2;
-      margin: 0;
-      padding: 20px;
+      background-color: #f5f7fa;
+      padding: 40px;
+      text-align: center;
     }
     h1 {
-      text-align: center;
-      color: #333;
+      color: #2c3e50;
       margin-bottom: 30px;
     }
-    .search {
-      max-width: 500px;
-      margin: 0 auto 20px;
-      display: flex;
-      gap: 10px;
-    }
-    input[type="text"] {
-      flex: 1;
+    #search {
       padding: 10px;
-      border-radius: 5px;
+      width: 300px;
+      margin-bottom: 20px;
       border: 1px solid #ccc;
+      border-radius: 5px;
       font-size: 16px;
     }
     table {
       width: 100%;
       border-collapse: collapse;
       background: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
     th, td {
-      padding: 12px;
-      border: 1px solid #ddd;
-      text-align: center;
+      padding: 15px;
+      border-bottom: 1px solid #eee;
     }
     th {
-      background: #007bff;
+      background-color: #3498db;
       color: white;
-    }
-    img {
-      max-width: 80px;
     }
     button {
       padding: 6px 12px;
-      margin: 2px;
       border: none;
       border-radius: 5px;
       cursor: pointer;
-      font-weight: bold;
+      font-size: 14px;
     }
-    .confirm-btn { background: #28a745; color: white; }
-    .edit-btn { background: #ffc107; color: black; }
-    .contract-btn { background: #17a2b8; color: white; }
+    .confirm { background-color: #2ecc71; color: white; }
+    .edit { background-color: #f39c12; color: white; }
+    .contract { background-color: #e74c3c; color: white; }
   </style>
 </head>
 <body>
-  <h1>📊 جدول العملاء</h1>
-  <div class="search">
-    <input type="text" id="searchInput" placeholder="ابحث باسم العميل أو الكود...">
-  </div>
-  <table id="clientsTable">
+  <h1>قائمة العملاء</h1>
+  <input type="text" id="search" placeholder="ابحث باسم العميل أو بالكود...">
+  <table id="dataTable">
     <thead>
       <tr>
         <th>الكود</th>
         <th>اسم العميل</th>
-        <th>رقم الهاتف</th>
+        <th>رقم العميل</th>
         <th>عرض السعر</th>
         <th>الرسومات</th>
-        <th>العمليات</th>
+        <th>إجراءات</th>
       </tr>
     </thead>
     <tbody id="tableBody"></tbody>
@@ -80,7 +68,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import { getDatabase, ref, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDgOby-sJuIUs8iCErmqtiMbqMuND5ZtCo",
@@ -95,47 +83,52 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const clientsRef = ref(db, 'clients');
+    const dataRef = ref(db, "clients");
 
     const tableBody = document.getElementById("tableBody");
-    const searchInput = document.getElementById("searchInput");
+    const searchInput = document.getElementById("search");
 
-    onValue(clientsRef, (snapshot) => {
+    function renderTable(data) {
       tableBody.innerHTML = "";
+      Object.entries(data).forEach(([key, item]) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${key}</td>
+          <td>${item.name}</td>
+          <td>${item.phone}</td>
+          <td><img src="${item.offer}" width="100"></td>
+          <td><img src="${item.drawing}" width="100"></td>
+          <td>
+            <button class="confirm">تأكيد</button>
+            <button class="edit">تعديل</button>
+            <button class="contract" onclick="goToContract('${key}', '${item.name}', '${item.phone}')">عقد</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    onValue(dataRef, (snapshot) => {
       const data = snapshot.val();
-      if (data) {
-        Object.entries(data).forEach(([key, val]) => {
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${val.code}</td>
-            <td>${val.name}</td>
-            <td>${val.phone}</td>
-            <td><img src="${val.quotation}" alt="عرض السعر"></td>
-            <td><img src="${val.drawings}" alt="الرسومات"></td>
-            <td>
-              <button class="confirm-btn" onclick="confirmClient('${key}')">تأكيد</button>
-              <button class="edit-btn" onclick="editClient('${key}')">تعديل</button>
-              <button class="contract-btn" onclick="goToContract('${key}')">عقد</button>
-            </td>
-          `;
-          tableBody.appendChild(row);
-        });
-      }
+      if (data) renderTable(data);
     });
 
     searchInput.addEventListener("input", () => {
-      const value = searchInput.value.toLowerCase();
+      const searchValue = searchInput.value.toLowerCase();
       const rows = tableBody.querySelectorAll("tr");
       rows.forEach(row => {
         const name = row.children[1].textContent.toLowerCase();
-        const code = row.children[0].textContent.toLowerCase();
-        row.style.display = name.includes(value) || code.includes(value) ? "" : "none";
+        const id = row.children[0].textContent.toLowerCase();
+        row.style.display = (name.includes(searchValue) || id.includes(searchValue)) ? "" : "none";
       });
     });
 
-    window.goToContract = (id) => {
-      window.location.href = `contract.html?id=${id}`;
-    };
+    window.goToContract = (id, name, phone) => {
+      localStorage.setItem("contract_id", id);
+      localStorage.setItem("contract_name", name);
+      localStorage.setItem("contract_phone", phone);
+      window.location.href = "contract.html";
+    }
   </script>
 </body>
 </html>
