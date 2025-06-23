@@ -1,41 +1,109 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Excel Database</title>
+  <meta charset="UTF-8">
+  <title>📊 جدول العملاء</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: Arial; padding: 20px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
-    input[type="text"] { width: 100%; padding: 6px; }
-    .actions button { margin: 0 4px; }
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #f0f2f5;
+      padding: 20px;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .form-container {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 800px;
+      margin: 0 auto 30px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input[type="text"], input[type="url"] {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      padding: 10px 15px;
+      margin-left: 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .confirm { background-color: #28a745; color: white; }
+    .edit { background-color: #ffc107; color: black; }
+    .contract { background-color: #007bff; color: white; }
+    .table-container {
+      overflow-x: auto;
+      margin-top: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+    th {
+      background-color: #343a40;
+      color: white;
+    }
+    .search-input {
+      width: 100%;
+      max-width: 400px;
+      margin: 10px auto 20px;
+      display: block;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
   </style>
 </head>
 <body>
-  <h1>📊 Excel-style Client Tracker</h1>
-  <input type="text" id="search" placeholder="Search by code or name" />
-  <form id="entryForm">
-    <input type="text" id="clientName" placeholder="Client Name" required />
-    <input type="text" id="clientPhone" placeholder="Client Phone" required />
-    <input type="file" id="offerImage" accept="image/*" required />
-    <input type="file" id="drawingImage" accept="image/*" required />
-    <button type="submit">Add</button>
-  </form>
+  <h1>📁 إدارة بيانات العملاء</h1>
+  <div class="form-container">
+    <input type="text" id="clientName" placeholder="اسم العميل">
+    <input type="text" id="clientPhone" placeholder="رقم الهاتف">
+    <input type="url" id="quoteImage" placeholder="رابط صورة عرض السعر">
+    <input type="url" id="drawingImage" placeholder="رابط صورة الرسومات">
+    <button onclick="addEntry()">➕ إضافة</button>
+  </div>
 
-  <table id="dataTable">
-    <thead>
-      <tr>
-        <th>Code</th><th>Name</th><th>Phone</th><th>Offer</th><th>Drawing</th><th>Actions</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  <input class="search-input" type="text" id="searchInput" placeholder="🔍 ابحث باسم العميل أو الكود...">
+
+  <div class="table-container">
+    <table id="clientTable">
+      <thead>
+        <tr>
+          <th>الكود</th>
+          <th>اسم العميل</th>
+          <th>رقم الهاتف</th>
+          <th>عرض السعر</th>
+          <th>الرسومات</th>
+          <th>الخيارات</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import { getDatabase, ref, push, set, onValue, remove, update } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
-    import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-storage.js";
+    import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDgOby-sJuIUs8iCErmqtiMbqMuND5ZtCo",
@@ -49,130 +117,69 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const db = getDatabase();
-    const storage = getStorage();
-    const tableBody = document.querySelector("#dataTable tbody");
-    const form = document.getElementById("entryForm");
-    const searchInput = document.getElementById("search");
+    const db = getDatabase(app);
+    const tableBody = document.querySelector("#clientTable tbody");
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const name = form.clientName.value.trim();
-      const phone = form.clientPhone.value.trim();
-      const offerFile = form.offerImage.files[0];
-      const drawingFile = form.drawingImage.files[0];
+    document.getElementById("searchInput").addEventListener("input", () => renderTable());
 
-      const key = push(ref(db, "clients"), {}).key;
+    function addEntry() {
+      const name = document.getElementById("clientName").value.trim();
+      const phone = document.getElementById("clientPhone").value.trim();
+      const quote = document.getElementById("quoteImage").value.trim();
+      const drawing = document.getElementById("drawingImage").value.trim();
 
-      const offerRef = sRef(storage, `offers/${key}`);
-      const drawingRef = sRef(storage, `drawings/${key}`);
-      const offerSnap = await uploadBytes(offerRef, offerFile);
-      const drawingSnap = await uploadBytes(drawingRef, drawingFile);
+      if (!name || !phone || !quote || !drawing) return alert("يرجى ملء كل الحقول");
 
-      const offerURL = await getDownloadURL(offerSnap.ref);
-      const drawingURL = await getDownloadURL(drawingSnap.ref);
+      const data = { name, phone, quote, drawing };
+      push(ref(db, 'clients'), data);
 
-      await set(ref(db, `clients/${key}`), {
-        id: key,
-        name,
-        phone,
-        offer: offerURL,
-        drawing: drawingURL
-      });
+      document.getElementById("clientName").value = "";
+      document.getElementById("clientPhone").value = "";
+      document.getElementById("quoteImage").value = "";
+      document.getElementById("drawingImage").value = "";
+    }
 
-      form.reset();
-    });
+    function renderTable() {
+      onValue(ref(db, 'clients'), (snapshot) => {
+        tableBody.innerHTML = '';
+        const filter = document.getElementById("searchInput").value.toLowerCase();
+        if (!snapshot.exists()) return;
 
-    function renderTable(data) {
-      tableBody.innerHTML = "";
-      Object.entries(data).forEach(([id, item], index) => {
-        if (!item.name.toLowerCase().includes(searchInput.value.toLowerCase()) && !id.includes(searchInput.value)) return;
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${id}</td>
-          <td>${item.name}</td>
-          <td>${item.phone}</td>
-          <td><a href="${item.offer}" target="_blank">📄</a></td>
-          <td><a href="${item.drawing}" target="_blank">📊</a></td>
-          <td class="actions">
-            <button onclick="confirmClient('${id}')">✅ Confirm</button>
-            <button onclick="editClient('${id}')">✏️ Edit</button>
-            <button onclick="window.open('contract.html?id=${id}')">📑 Contract</button>
-          </td>
-        `;
-        tableBody.appendChild(tr);
+        Object.entries(snapshot.val()).forEach(([key, val], index) => {
+          if (!val.name.toLowerCase().includes(filter) && !key.toLowerCase().includes(filter)) return;
+
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${key}</td>
+            <td>${val.name}</td>
+            <td>${val.phone}</td>
+            <td><a href="${val.quote}" target="_blank">عرض</a></td>
+            <td><a href="${val.drawing}" target="_blank">رسمة</a></td>
+            <td>
+              <button class="confirm" onclick="confirmRow('${key}')">تأكيد</button>
+              <button class="edit" onclick="editRow('${key}')">تعديل</button>
+              <button class="contract" onclick="window.location.href='contract.html?id=${key}'">عقد</button>
+            </td>
+          `;
+          tableBody.appendChild(tr);
+        });
       });
     }
 
-    onValue(ref(db, "clients"), (snapshot) => {
-      const data = snapshot.val() || {};
-      renderTable(data);
-    });
+    window.confirmRow = (id) => alert("✅ تم تأكيد الصف: " + id);
 
-    searchInput.addEventListener("input", () => {
-      onValue(ref(db, "clients"), (snapshot) => {
-        const data = snapshot.val() || {};
-        renderTable(data);
-      }, { onlyOnce: true });
-    });
-
-    window.confirmClient = async (id) => {
-      alert("Client " + id + " confirmed!");
-    };
-
-    window.editClient = (id) => {
-      alert("Edit client " + id);
-    };
-  </script>
-</body>
-</html>
-
-<!-- contract.html -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Client Contract</title>
-  <style>
-    body { font-family: Arial; padding: 20px; }
-    img { max-width: 100%; height: auto; margin-bottom: 10px; }
-  </style>
-</head>
-<body>
-  <h2>📄 Client Contract</h2>
-  <div id="contract"></div>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDgOby-sJuIUs8iCErmqtiMbqMuND5ZtCo",
-      authDomain: "ala5tsas-alturkey-stats.firebaseapp.com",
-      databaseURL: "https://ala5tsas-alturkey-stats-default-rtdb.firebaseio.com",
-      projectId: "ala5tsas-alturkey-stats",
-      storageBucket: "ala5tsas-alturkey-stats.appspot.com",
-      messagingSenderId: "649675735929",
-      appId: "1:649675735929:web:f90a49614895c6958ea5a8",
-      measurementId: "G-X2FHKZT21J"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase();
-    const id = new URLSearchParams(window.location.search).get("id");
-
-    get(child(ref(db), `clients/${id}`)).then(snap => {
-      if (snap.exists()) {
-        const data = snap.val();
-        document.getElementById("contract").innerHTML = `
-          <p><strong>Client Name:</strong> ${data.name}</p>
-          <p><strong>Phone:</strong> ${data.phone}</p>
-          <p><strong>Contract:</strong><br><img src="${data.offer}" /></p>
-          <p><strong>Accounts:</strong><br><img src="${data.drawing}" /></p>
-        `;
+    window.editRow = async (id) => {
+      const snapshot = await import('https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js').then(({ get }) => get(ref(db, 'clients/' + id)));
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        document.getElementById("clientName").value = data.name;
+        document.getElementById("clientPhone").value = data.phone;
+        document.getElementById("quoteImage").value = data.quote;
+        document.getElementById("drawingImage").value = data.drawing;
       }
-    });
+    };
+
+    renderTable();
   </script>
 </body>
 </html>
