@@ -2,73 +2,100 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>لوحة بيانات العملاء</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&display=swap" rel="stylesheet">
+  <title>إدارة العملاء - الصفحة الرئيسية</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       font-family: 'Cairo', sans-serif;
-      background-color: #f5f7fa;
-      padding: 40px;
-      text-align: center;
+      background: #f5f7fa;
+      padding: 30px;
+      direction: rtl;
     }
     h1 {
-      color: #2c3e50;
-      margin-bottom: 30px;
+      text-align: center;
+      color: #333;
     }
-    #search {
-      padding: 10px;
-      width: 300px;
-      margin-bottom: 20px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      font-size: 16px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
+    .form-container, .table-container {
       background: white;
+      padding: 20px;
+      margin: 20px auto;
+      border-radius: 10px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      max-width: 900px;
     }
-    th, td {
-      padding: 15px;
-      border-bottom: 1px solid #eee;
-    }
-    th {
-      background-color: #3498db;
-      color: white;
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
     }
     button {
-      padding: 6px 12px;
+      padding: 10px 20px;
+      margin: 10px 5px;
       border: none;
       border-radius: 5px;
       cursor: pointer;
-      font-size: 14px;
+      font-weight: bold;
     }
-    .confirm { background-color: #2ecc71; color: white; }
-    .edit { background-color: #f39c12; color: white; }
-    .contract { background-color: #e74c3c; color: white; }
+    button.confirm { background: #28a745; color: white; }
+    button.edit { background: #ffc107; color: black; }
+    button.contract { background: #007bff; color: white; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+    img {
+      max-width: 100px;
+      max-height: 100px;
+    }
+    .search {
+      text-align: center;
+      margin-bottom: 20px;
+    }
   </style>
 </head>
 <body>
-  <h1>قائمة العملاء</h1>
-  <input type="text" id="search" placeholder="ابحث باسم العميل أو بالكود...">
-  <table id="dataTable">
-    <thead>
-      <tr>
-        <th>الكود</th>
-        <th>اسم العميل</th>
-        <th>رقم العميل</th>
-        <th>عرض السعر</th>
-        <th>الرسومات</th>
-        <th>إجراءات</th>
-      </tr>
-    </thead>
-    <tbody id="tableBody"></tbody>
-  </table>
+  <h1>📋 إدارة بيانات العملاء</h1>
+
+  <div class="form-container">
+    <h2>➕ إضافة عميل جديد</h2>
+    <input type="text" id="clientName" placeholder="اسم العميل" />
+    <input type="text" id="clientPhone" placeholder="رقم الهاتف" />
+    <input type="url" id="clientOffer" placeholder="رابط صورة عرض السعر" />
+    <input type="url" id="clientDrawing" placeholder="رابط صورة الرسومات" />
+    <button onclick="addClient()">إضافة العميل</button>
+  </div>
+
+  <div class="table-container">
+    <div class="search">
+      <input type="text" id="searchInput" oninput="searchTable()" placeholder="ابحث باسم أو رقم العميل..." />
+    </div>
+    <h2>📄 قائمة العملاء</h2>
+    <table id="clientsTable">
+      <thead>
+        <tr>
+          <th>كود</th>
+          <th>الاسم</th>
+          <th>رقم الهاتف</th>
+          <th>عرض السعر</th>
+          <th>الرسومات</th>
+          <th>التحكم</th>
+        </tr>
+      </thead>
+      <tbody id="clientsBody"></tbody>
+    </table>
+  </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
+    import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDgOby-sJuIUs8iCErmqtiMbqMuND5ZtCo",
@@ -83,52 +110,72 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const dataRef = ref(db, "clients");
+    const clientsRef = ref(db, "clients");
 
-    const tableBody = document.getElementById("tableBody");
-    const searchInput = document.getElementById("search");
+    window.addClient = async () => {
+      const name = document.getElementById("clientName").value.trim();
+      const phone = document.getElementById("clientPhone").value.trim();
+      const offer = document.getElementById("clientOffer").value.trim();
+      const drawing = document.getElementById("clientDrawing").value.trim();
 
-    function renderTable(data) {
-      tableBody.innerHTML = "";
-      Object.entries(data).forEach(([key, item]) => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${key}</td>
-          <td>${item.name}</td>
-          <td>${item.phone}</td>
-          <td><img src="${item.offer}" width="100"></td>
-          <td><img src="${item.drawing}" width="100"></td>
+      if (!name || !phone || !offer || !drawing) return alert("املأ كل البيانات");
+
+      const newClient = { name, phone, offer, drawing };
+      await push(clientsRef, newClient);
+
+      document.getElementById("clientName").value = "";
+      document.getElementById("clientPhone").value = "";
+      document.getElementById("clientOffer").value = "";
+      document.getElementById("clientDrawing").value = "";
+    };
+
+    onValue(clientsRef, (snapshot) => {
+      const data = snapshot.val();
+      const tbody = document.getElementById("clientsBody");
+      tbody.innerHTML = "";
+
+      if (!data) return;
+
+      Object.entries(data).forEach(([key, client], index) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${client.name}</td>
+          <td>${client.phone}</td>
+          <td><img src="${client.offer}" alt="عرض السعر" /></td>
+          <td><img src="${client.drawing}" alt="رسومات" /></td>
           <td>
-            <button class="confirm">تأكيد</button>
-            <button class="edit">تعديل</button>
-            <button class="contract" onclick="goToContract('${key}', '${item.name}', '${item.phone}')">عقد</button>
+            <button class="confirm" onclick="confirmClient('${key}')">تأكيد</button>
+            <button class="edit" onclick="editClient('${key}')">تعديل</button>
+            <button class="contract" onclick="sendToContract('${key}')">عقد</button>
           </td>
         `;
-        tableBody.appendChild(row);
+        tbody.appendChild(tr);
       });
-    }
-
-    onValue(dataRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) renderTable(data);
     });
 
-    searchInput.addEventListener("input", () => {
-      const searchValue = searchInput.value.toLowerCase();
-      const rows = tableBody.querySelectorAll("tr");
+    window.confirmClient = async (id) => {
+      alert("✅ تم تأكيد العميل " + id);
+    };
+
+    window.editClient = async (id) => {
+      alert("✏️ تعديل العميل: " + id);
+    };
+
+    window.sendToContract = async (id) => {
+      localStorage.setItem("contractId", id);
+      window.location.href = "contract.html";
+    };
+
+    window.searchTable = () => {
+      const input = document.getElementById("searchInput").value.toLowerCase();
+      const rows = document.querySelectorAll("#clientsTable tbody tr");
       rows.forEach(row => {
         const name = row.children[1].textContent.toLowerCase();
-        const id = row.children[0].textContent.toLowerCase();
-        row.style.display = (name.includes(searchValue) || id.includes(searchValue)) ? "" : "none";
+        const phone = row.children[2].textContent.toLowerCase();
+        row.style.display = name.includes(input) || phone.includes(input) ? "" : "none";
       });
-    });
-
-    window.goToContract = (id, name, phone) => {
-      localStorage.setItem("contract_id", id);
-      localStorage.setItem("contract_name", name);
-      localStorage.setItem("contract_phone", phone);
-      window.location.href = "contract.html";
-    }
+    };
   </script>
 </body>
 </html>
