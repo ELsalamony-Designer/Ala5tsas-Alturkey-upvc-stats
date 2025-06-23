@@ -1,151 +1,122 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <title>إدارة العملاء</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <title>الرئيسية | إدارة العملاء</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js"></script>
+  <script src="firebase-config.js"></script>
   <style>
-    body { font-family: 'Cairo', sans-serif; background: #f2f2f2; direction: rtl; padding: 20px; }
-    h1 { text-align: center; color: #333; }
-    form { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 0 10px #ccc; max-width: 700px; margin: auto 0 20px; }
-    form input, form button { display: block; width: 100%; margin: 10px 0; padding: 10px; border-radius: 6px; }
-    form button { background: #28a745; color: white; border: none; font-weight: bold; cursor: pointer; }
-    table { width: 100%; background: white; border-collapse: collapse; margin-bottom: 20px; }
-    th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
-    th { background: #eee; }
-    button.action { margin: 2px; padding: 6px 10px; border: none; border-radius: 4px; cursor: pointer; }
-    .edit { background: #ffc107; color: black; }
-    .delete { background: #dc3545; color: white; }
-    .contract { background: #007bff; color: white; }
-    #searchInput { width: calc(100% - 22px); padding: 10px; margin: auto 0 20px; display: block; max-width: 700px; }
+    body { font-family: 'Arial'; direction: rtl; padding: 20px; background: #f5f5f5; }
+    table { width: 100%; border-collapse: collapse; background: white; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    input { width: 100%; padding: 5px; }
+    img { max-width: 100px; max-height: 80px; }
+    button { padding: 5px 10px; margin: 2px; cursor: pointer; }
   </style>
 </head>
 <body>
 
-<h1>نظام إدارة العملاء</h1>
-
-<form id="clientForm">
-  <input type="text" id="name" placeholder="اسم العميل" required>
-  <input type="text" id="phone" placeholder="رقم الهاتف" required>
-  <input type="url" id="estimate" placeholder="رابط صورة عرض السعر" required>
-  <input type="url" id="drawings" placeholder="رابط صورة الرسومات" required>
-  <button type="submit">➕ إضافة عميل</button>
-</form>
-
-<input type="text" id="searchInput" placeholder="ابحث بالاسم أو الكود">
-
-<table id="clientsTable">
+<h2>إدارة العملاء</h2>
+<table id="dataTable">
   <thead>
     <tr>
       <th>الكود</th>
-      <th>الاسم</th>
-      <th>رقم الهاتف</th>
-      <th>عرض السعر</th>
-      <th>الرسومات</th>
-      <th>خيارات</th>
+      <th>اسم العميل</th>
+      <th>رقم العميل</th>
+      <th>صورة عرض السعر</th>
+      <th>صورة الرسومات</th>
+      <th>تأكيد</th>
+      <th>تعديل</th>
+      <th>عقد</th>
     </tr>
   </thead>
-  <tbody></tbody>
+  <tbody id="tableBody">
+    <!-- السطور هتضاف تلقائي -->
+  </tbody>
 </table>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-  import { getDatabase, ref, push, set, onValue, remove, get, child } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+<br><br>
+<button onclick="addRow()">➕ إضافة عميل</button>
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyBFfikBhlWhcMUK50w3-GvaanceJjuQSBs",
-    authDomain: "ala5tsas-alturkey-stats-56299.firebaseapp.com",
-    databaseURL: "https://ala5tsas-alturkey-stats-56299-default-rtdb.firebaseio.com",
-    projectId: "ala5tsas-alturkey-stats-56299",
-    storageBucket: "ala5tsas-alturkey-stats-56299.firebasestorage.app",
-    messagingSenderId: "432379375706",
-    appId: "1:432379375706:web:843fc3cb6c445c56a3a863",
-    measurementId: "G-CHYVT4EYFL"
-  };
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-  const clientsRef = ref(db, 'clients');
-  const contractsRef = ref(db, 'contracts');
+<script>
+let rowCount = 0;
 
-  const form = document.getElementById("clientForm");
-  const tbody = document.querySelector("#clientsTable tbody");
-  const searchInput = document.getElementById("searchInput");
+function addRow() {
+  const table = document.getElementById("tableBody");
+  const row = table.insertRow();
+  const code = ++rowCount;
 
-  form.addEventListener("submit", async e => {
-    e.preventDefault();
-    const name = document.getElementById("name").value.trim();
-    const phone = document.getElementById("phone").value.trim();
-    const estimate = document.getElementById("estimate").value.trim();
-    const drawings = document.getElementById("drawings").value.trim();
-    if (!name || !phone || !estimate || !drawings) return alert("يرجى تعبئة جميع الحقول");
+  row.innerHTML = `
+    <td>${code}</td>
+    <td><input type="text" id="name-${code}"></td>
+    <td><input type="text" id="phone-${code}"></td>
+    <td><input type="file" id="offer-${code}" accept="image/*"></td>
+    <td><input type="file" id="drawing-${code}" accept="image/*"></td>
+    <td><button onclick="confirmRow(${code})">تأكيد</button></td>
+    <td><button onclick="editRow(${code})">تعديل</button></td>
+    <td><button onclick="sendToContract(${code})">عقد</button></td>
+  `;
+}
 
-    const newRef = push(clientsRef);
-    await set(newRef, { code: newRef.key, name, phone, estimate, drawings });
-    form.reset();
+// تأكيد البيانات
+async function confirmRow(code) {
+  const name = document.getElementById(`name-${code}`).value;
+  const phone = document.getElementById(`phone-${code}`).value;
+  const offer = document.getElementById(`offer-${code}`).files[0];
+  const drawing = document.getElementById(`drawing-${code}`).files[0];
+
+  if (!name || !phone || !offer || !drawing) {
+    alert("يرجى ملء كل الحقول ورفع الصور");
+    return;
+  }
+
+  const offerRef = firebase.storage().ref(`offers/${code}-${offer.name}`);
+  const drawRef = firebase.storage().ref(`drawings/${code}-${drawing.name}`);
+
+  await offerRef.put(offer);
+  await drawRef.put(drawing);
+
+  const offerURL = await offerRef.getDownloadURL();
+  const drawURL = await drawRef.getDownloadURL();
+
+  const db = firebase.database();
+  db.ref("clients/" + code).set({
+    name: name,
+    phone: phone,
+    offerImage: offerURL,
+    drawingImage: drawURL
   });
 
-  onValue(clientsRef, snapshot => {
-    const data = snapshot.val();
-    tbody.innerHTML = "";
-    if (data) {
-      Object.entries(data).forEach(([id, client]) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${client.code}</td>
-          <td>${client.name}</td>
-          <td>${client.phone}</td>
-          <td><img src="${client.estimate}" width="60"></td>
-          <td><img src="${client.drawings}" width="60"></td>
-          <td>
-            <button class="action edit" onclick="editClient('${id}')">✏️</button>
-            <button class="action delete" onclick="deleteClient('${id}')">🗑️</button>
-            <button class="action contract" onclick="confirmContract('${id}')">📄</button>
-          </td>`;
-        tbody.appendChild(tr);
-      });
-    }
-  });
+  alert("تم الحفظ!");
+}
 
-  window.deleteClient = id => {
-    if (confirm("هل تريد حذف هذا العميل؟")) remove(child(clientsRef, id));
-  };
+// تعديل البيانات (ممكن تطوره)
+function editRow(code) {
+  alert("قم بالتعديل في الحقول مباشرة ثم اضغط تأكيد مرة أخرى.");
+}
 
-  window.editClient = async id => {
-    const snap = await get(child(ref(db), `clients/${id}`));
-    if (!snap.exists()) return alert("العميل غير موجود");
-    const c = snap.val();
-    const name = prompt("اسم جديد:", c.name);
-    const phone = prompt("رقم جديد:", c.phone);
-    const estimate = prompt("رابط عرض السعر:", c.estimate);
-    const drawings = prompt("رابط الرسومات:", c.drawings);
-    if (name && phone && estimate && drawings) {
-      set(child(ref(db), `clients/${id}`), { code: id, name, phone, estimate, drawings });
-    }
-  };
+// إرسال لصفحة العقود
+function sendToContract(code) {
+  const db = firebase.database();
+  db.ref("clients/" + code).once("value", (snap) => {
+    const data = snap.val();
+    if (!data) return alert("البيانات غير موجودة");
 
-  window.confirmContract = async id => {
-    const snap = await get(child(ref(db), `clients/${id}`));
-    if (!snap.exists()) return alert("العميل غير موجود");
-    const c = snap.val();
-    const contract = prompt("رابط صورة العقد:");
-    const accounts = prompt("رابط صورة الحسابات:");
-    if (!contract || !accounts) return alert("يرجى إدخال كل الروابط");
-    await set(child(ref(db), `contracts/${id}`), {
-      code: c.code, name: c.name, phone: c.phone, contract, accounts
+    db.ref("contracts/" + code).set({
+      name: data.name,
+      phone: data.phone,
+      contractImage: data.offerImage,
+      accountsImage: data.drawingImage
     });
-    alert("تم تأكيد العقد وانتقالك لصفحة العقود");
-    window.location.href = "contract.html";
-  };
 
-  searchInput.addEventListener("input", () => {
-    const filter = searchInput.value.toLowerCase();
-    document.querySelectorAll("#clientsTable tbody tr").forEach(row => {
-      const t0 = row.children[0].textContent.toLowerCase();
-      const t1 = row.children[1].textContent.toLowerCase();
-      row.style.display = t0.includes(filter) || t1.includes(filter) ? "" : "none";
-    });
+    db.ref("clients/" + code).remove();
+    alert("تم النقل لصفحة العقود");
+    location.reload();
   });
+}
 </script>
-
 </body>
 </html>
