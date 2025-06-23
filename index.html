@@ -2,180 +2,164 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>إدارة العملاء - الصفحة الرئيسية</title>
+  <title>إدارة العملاء</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       font-family: 'Cairo', sans-serif;
-      background: #f5f7fa;
-      padding: 30px;
+      background: #f2f2f2;
+      margin: 0;
+      padding: 20px;
       direction: rtl;
     }
     h1 {
       text-align: center;
       color: #333;
     }
-    .form-container, .table-container {
-      background: white;
-      padding: 20px;
-      margin: 20px auto;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      max-width: 900px;
-    }
-    input {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-    button {
-      padding: 10px 20px;
-      margin: 10px 5px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    button.confirm { background: #28a745; color: white; }
-    button.edit { background: #ffc107; color: black; }
-    button.contract { background: #007bff; color: white; }
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 20px;
+      background: #fff;
     }
     th, td {
+      border: 1px solid #ccc;
       padding: 10px;
-      border: 1px solid #ddd;
       text-align: center;
     }
-    img {
-      max-width: 100px;
-      max-height: 100px;
+    th {
+      background: #eee;
     }
-    .search {
-      text-align: center;
-      margin-bottom: 20px;
+    button {
+      padding: 6px 12px;
+      margin: 2px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .edit { background-color: #ffc107; }
+    .delete { background-color: #dc3545; color: white; }
+    .contract { background-color: #28a745; color: white; }
+    input[type="text"] {
+      padding: 8px;
+      width: 300px;
+      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
-  <h1>📋 إدارة بيانات العملاء</h1>
 
-  <div class="form-container">
-    <h2>➕ إضافة عميل جديد</h2>
-    <input type="text" id="clientName" placeholder="اسم العميل" />
-    <input type="text" id="clientPhone" placeholder="رقم الهاتف" />
-    <input type="url" id="clientOffer" placeholder="رابط صورة عرض السعر" />
-    <input type="url" id="clientDrawing" placeholder="رابط صورة الرسومات" />
-    <button onclick="addClient()">إضافة العميل</button>
-  </div>
+<h1>جدول العملاء</h1>
+<input type="text" id="searchInput" placeholder="ابحث بالاسم أو الكود">
+<table id="clientsTable">
+  <thead>
+    <tr>
+      <th>الكود</th>
+      <th>اسم العميل</th>
+      <th>رقم الهاتف</th>
+      <th>عرض السعر</th>
+      <th>الرسومات</th>
+      <th>الخيارات</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
 
-  <div class="table-container">
-    <div class="search">
-      <input type="text" id="searchInput" oninput="searchTable()" placeholder="ابحث باسم أو رقم العميل..." />
-    </div>
-    <h2>📄 قائمة العملاء</h2>
-    <table id="clientsTable">
-      <thead>
-        <tr>
-          <th>كود</th>
-          <th>الاسم</th>
-          <th>رقم الهاتف</th>
-          <th>عرض السعر</th>
-          <th>الرسومات</th>
-          <th>التحكم</th>
-        </tr>
-      </thead>
-      <tbody id="clientsBody"></tbody>
-    </table>
-  </div>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+  import { getDatabase, ref, onValue, remove, set, push } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
+  const firebaseConfig = {
+    apiKey: "AIzaSyDgOby-sJuIUs8iCErmqtiMbqMuND5ZtCo",
+    authDomain: "ala5tsas-alturkey-stats.firebaseapp.com",
+    databaseURL: "https://ala5tsas-alturkey-stats-default-rtdb.firebaseio.com",
+    projectId: "ala5tsas-alturkey-stats",
+    storageBucket: "ala5tsas-alturkey-stats.firebasestorage.app",
+    messagingSenderId: "649675735929",
+    appId: "1:649675735929:web:f90a49614895c6958ea5a8",
+    measurementId: "G-X2FHKZT21J"
+  };
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDgOby-sJuIUs8iCErmqtiMbqMuND5ZtCo",
-      authDomain: "ala5tsas-alturkey-stats.firebaseapp.com",
-      databaseURL: "https://ala5tsas-alturkey-stats-default-rtdb.firebaseio.com",
-      projectId: "ala5tsas-alturkey-stats",
-      storageBucket: "ala5tsas-alturkey-stats.appspot.com",
-      messagingSenderId: "649675735929",
-      appId: "1:649675735929:web:f90a49614895c6958ea5a8",
-      measurementId: "G-X2FHKZT21J"
-    };
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const clientsRef = ref(db, 'clients');
+  const contractsRef = ref(db, 'contracts');
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const clientsRef = ref(db, "clients");
+  const tbody = document.querySelector("#clientsTable tbody");
+  const searchInput = document.getElementById("searchInput");
 
-    window.addClient = async () => {
-      const name = document.getElementById("clientName").value.trim();
-      const phone = document.getElementById("clientPhone").value.trim();
-      const offer = document.getElementById("clientOffer").value.trim();
-      const drawing = document.getElementById("clientDrawing").value.trim();
-
-      if (!name || !phone || !offer || !drawing) return alert("املأ كل البيانات");
-
-      const newClient = { name, phone, offer, drawing };
-      await push(clientsRef, newClient);
-
-      document.getElementById("clientName").value = "";
-      document.getElementById("clientPhone").value = "";
-      document.getElementById("clientOffer").value = "";
-      document.getElementById("clientDrawing").value = "";
-    };
-
-    onValue(clientsRef, (snapshot) => {
-      const data = snapshot.val();
-      const tbody = document.getElementById("clientsBody");
-      tbody.innerHTML = "";
-
-      if (!data) return;
-
-      Object.entries(data).forEach(([key, client], index) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${index + 1}</td>
-          <td>${client.name}</td>
-          <td>${client.phone}</td>
-          <td><img src="${client.offer}" alt="عرض السعر" /></td>
-          <td><img src="${client.drawing}" alt="رسومات" /></td>
-          <td>
-            <button class="confirm" onclick="confirmClient('${key}')">تأكيد</button>
-            <button class="edit" onclick="editClient('${key}')">تعديل</button>
-            <button class="contract" onclick="sendToContract('${key}')">عقد</button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
+  function renderClients(data) {
+    tbody.innerHTML = "";
+    Object.entries(data).forEach(([id, client]) => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${client.code}</td>
+        <td>${client.name}</td>
+        <td>${client.phone}</td>
+        <td><img src="${client.estimate}" alt="عرض السعر" width="80"></td>
+        <td><img src="${client.drawings}" alt="الرسومات" width="80"></td>
+        <td>
+          <button class="edit" onclick="editClient('${id}')">✏️ تعديل</button>
+          <button class="delete" onclick="deleteClient('${id}')">🗑️ حذف</button>
+          <button class="contract" onclick="confirmContract('${id}')">📑 تأكيد العقد</button>
+        </td>
+      `;
+      tbody.appendChild(row);
     });
+  }
 
-    window.confirmClient = async (id) => {
-      alert("✅ تم تأكيد العميل " + id);
-    };
+  onValue(clientsRef, snapshot => {
+    const data = snapshot.val();
+    if (data) renderClients(data);
+  });
 
-    window.editClient = async (id) => {
-      alert("✏️ تعديل العميل: " + id);
-    };
+  window.deleteClient = (id) => {
+    if (confirm("هل أنت متأكد من حذف هذا العميل؟")) {
+      remove(ref(db, 'clients/' + id));
+    }
+  };
 
-    window.sendToContract = async (id) => {
-      localStorage.setItem("contractId", id);
-      window.location.href = "contract.html";
-    };
-
-    window.searchTable = () => {
-      const input = document.getElementById("searchInput").value.toLowerCase();
-      const rows = document.querySelectorAll("#clientsTable tbody tr");
-      rows.forEach(row => {
-        const name = row.children[1].textContent.toLowerCase();
-        const phone = row.children[2].textContent.toLowerCase();
-        row.style.display = name.includes(input) || phone.includes(input) ? "" : "none";
+  window.editClient = (id) => {
+    const name = prompt("أدخل اسم العميل الجديد:");
+    const phone = prompt("أدخل رقم الهاتف:");
+    const estimate = prompt("رابط صورة عرض السعر:");
+    const drawings = prompt("رابط صورة الرسومات:");
+    if (name && phone && estimate && drawings) {
+      set(ref(db, 'clients/' + id), {
+        code: id,
+        name,
+        phone,
+        estimate,
+        drawings
       });
-    };
-  </script>
+    }
+  };
+
+  window.confirmContract = async (id) => {
+    const snapshot = await import("https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js").then(module =>
+      module.get(ref(db, 'clients/' + id))
+    );
+    if (snapshot.exists()) {
+      const client = snapshot.val();
+      await set(ref(db, 'contracts/' + id), {
+        code: client.code,
+        name: client.name,
+        phone: client.phone,
+        contract: prompt("رابط صورة العقد:"),
+        accounts: prompt("رابط صورة الحسابات:")
+      });
+      window.location.href = "contract.html";
+    }
+  };
+
+  searchInput.addEventListener("input", () => {
+    const filter = searchInput.value.toLowerCase();
+    const rows = tbody.querySelectorAll("tr");
+    rows.forEach(row => {
+      const name = row.children[1].textContent.toLowerCase();
+      const code = row.children[0].textContent.toLowerCase();
+      row.style.display = name.includes(filter) || code.includes(filter) ? "" : "none";
+    });
+  });
+</script>
 </body>
 </html>
