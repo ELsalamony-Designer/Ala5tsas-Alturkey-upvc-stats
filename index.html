@@ -1,185 +1,163 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <title>📊 جدول العملاء</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
-  <style>
-    body {
-      font-family: 'Cairo', sans-serif;
-      background-color: #f0f2f5;
-      padding: 20px;
-      color: #333;
-    }
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .form-container {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      max-width: 800px;
-      margin: 0 auto 30px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    input[type="text"], input[type="url"] {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    button {
-      padding: 10px 15px;
-      margin-left: 10px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    .confirm { background-color: #28a745; color: white; }
-    .edit { background-color: #ffc107; color: black; }
-    .contract { background-color: #007bff; color: white; }
-    .table-container {
-      overflow-x: auto;
-      margin-top: 20px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      border-radius: 10px;
-      overflow: hidden;
-    }
-    th, td {
-      padding: 10px;
-      border: 1px solid #ddd;
-      text-align: center;
-    }
-    th {
-      background-color: #343a40;
-      color: white;
-    }
-    .search-input {
-      width: 100%;
-      max-width: 400px;
-      margin: 10px auto 20px;
-      display: block;
-      padding: 10px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-  </style>
+  <meta charset="UTF-8">
+  <title>جدول العملاء</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: #f2f2f2;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 30px;
+    }
+    .search {
+      max-width: 500px;
+      margin: 0 auto 20px;
+      display: flex;
+      gap: 10px;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+    }
+    th, td {
+      padding: 12px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+    th {
+      background: #007bff;
+      color: white;
+    }
+    img {
+      max-width: 80px;
+    }
+    button {
+      padding: 6px 12px;
+      margin: 2px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .confirm-btn { background: #28a745; color: white; }
+    .edit-btn { background: #ffc107; color: black; }
+    .contract-btn { background: #17a2b8; color: white; }
+  </style>
 </head>
 <body>
-  <h1>📁 إدارة بيانات العملاء</h1>
-  <div class="form-container">
-    <input type="text" id="clientName" placeholder="اسم العميل">
-    <input type="text" id="clientPhone" placeholder="رقم الهاتف">
-    <input type="url" id="quoteImage" placeholder="رابط صورة عرض السعر">
-    <input type="url" id="drawingImage" placeholder="رابط صورة الرسومات">
-    <button onclick="addEntry()">➕ إضافة</button>
-  </div>
+  <h1>📊 جدول العملاء</h1>
+  <div class="search">
+    <input type="text" id="searchInput" placeholder="ابحث باسم العميل أو الكود...">
+  </div>
+  <table id="clientsTable">
+    <thead>
+      <tr>
+        <th>الكود</th>
+        <th>اسم العميل</th>
+        <th>رقم الهاتف</th>
+        <th>عرض السعر</th>
+        <th>الرسومات</th>
+        <th>العمليات</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
 
-  <input class="search-input" type="text" id="searchInput" placeholder="🔍 ابحث باسم العميل أو الكود...">
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { getDatabase, ref, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
 
-  <div class="table-container">
-    <table id="clientTable">
-      <thead>
-        <tr>
-          <th>الكود</th>
-          <th>اسم العميل</th>
-          <th>رقم الهاتف</th>
-          <th>عرض السعر</th>
-          <th>الرسومات</th>
-          <th>الخيارات</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDgOby-sJuIUs8iCErmqtiMbqMuND5ZtCo",
+      authDomain: "ala5tsas-alturkey-stats.firebaseapp.com",
+      databaseURL: "https://ala5tsas-alturkey-stats-default-rtdb.firebaseio.com",
+      projectId: "ala5tsas-alturkey-stats",
+      storageBucket: "ala5tsas-alturkey-stats.appspot.com",
+      messagingSenderId: "649675735929",
+      appId: "1:649675735929:web:f90a49614895c6958ea5a8",
+      measurementId: "G-X2FHKZT21J"
+    };
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const clientsRef = ref(db, 'clients');
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDgOby-sJuIUs8iCErmqtiMbqMuND5ZtCo",
-      authDomain: "ala5tsas-alturkey-stats.firebaseapp.com",
-      databaseURL: "https://ala5tsas-alturkey-stats-default-rtdb.firebaseio.com",
-      projectId: "ala5tsas-alturkey-stats",
-      storageBucket: "ala5tsas-alturkey-stats.appspot.com",
-      messagingSenderId: "649675735929",
-      appId: "1:649675735929:web:f90a49614895c6958ea5a8",
-      measurementId: "G-X2FHKZT21J"
-    };
+    const tableBody = document.getElementById("tableBody");
+    const searchInput = document.getElementById("searchInput");
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const tableBody = document.querySelector("#clientTable tbody");
+    onValue(clientsRef, (snapshot) => {
+      tableBody.innerHTML = "";
+      const data = snapshot.val();
+      if (data) {
+        Object.entries(data).forEach(([key, val]) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${val.code}</td>
+            <td>${val.name}</td>
+            <td>${val.phone}</td>
+            <td><img src="${val.quotation}" alt="عرض السعر"></td>
+            <td><img src="${val.drawings}" alt="الرسومات"></td>
+            <td>
+              <button class="confirm-btn" onclick="confirmClient('${key}')">تأكيد</button>
+              <button class="edit-btn" onclick="editClient('${key}')">تعديل</button>
+              <button class="contract-btn" onclick="goToContract('${key}')">عقد</button>
+            </td>
+          `;
+          tableBody.appendChild(row);
+        });
+      }
+    });
 
-    document.getElementById("searchInput").addEventListener("input", () => renderTable());
+    searchInput.addEventListener("input", () => {
+      const value = searchInput.value.toLowerCase();
+      const rows = tableBody.querySelectorAll("tr");
+      rows.forEach(row => {
+        const name = row.children[1].textContent.toLowerCase();
+        const code = row.children[0].textContent.toLowerCase();
+        row.style.display = name.includes(value) || code.includes(value) ? "" : "none";
+      });
+    });
 
-    function addEntry() {
-      const name = document.getElementById("clientName").value.trim();
-      const phone = document.getElementById("clientPhone").value.trim();
-      const quote = document.getElementById("quoteImage").value.trim();
-      const drawing = document.getElementById("drawingImage").value.trim();
+    window.goToContract = (id) => {
+      window.location.href = `contract.html?id=${id}`;
+    };
 
-      if (!name || !phone || !quote || !drawing) return alert("يرجى ملء كل الحقول");
+    // Placeholder for confirmClient function
+    window.confirmClient = async (id) => {
+      if (confirm("هل أنت متأكد أنك تريد تأكيد هذا العميل؟")) {
+        try {
+          // Example: Update a 'confirmed' status in Firebase
+          await update(ref(db, `clients/${id}`), { confirmed: true });
+          alert("تم تأكيد العميل بنجاح!");
+        } catch (error) {
+          console.error("Error confirming client:", error);
+          alert("حدث خطأ أثناء تأكيد العميل.");
+        }
+      }
+    };
 
-      const data = { name, phone, quote, drawing };
-      push(ref(db, 'clients'), data);
-
-      document.getElementById("clientName").value = "";
-      document.getElementById("clientPhone").value = "";
-      document.getElementById("quoteImage").value = "";
-      document.getElementById("drawingImage").value = "";
-    }
-
-    function renderTable() {
-      onValue(ref(db, 'clients'), (snapshot) => {
-        tableBody.innerHTML = '';
-        const filter = document.getElementById("searchInput").value.toLowerCase();
-        if (!snapshot.exists()) return;
-
-        Object.entries(snapshot.val()).forEach(([key, val], index) => {
-          if (!val.name.toLowerCase().includes(filter) && !key.toLowerCase().includes(filter)) return;
-
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${key}</td>
-            <td>${val.name}</td>
-            <td>${val.phone}</td>
-            <td><a href="${val.quote}" target="_blank">عرض</a></td>
-            <td><a href="${val.drawing}" target="_blank">رسمة</a></td>
-            <td>
-              <button class="confirm" onclick="confirmRow('${key}')">تأكيد</button>
-              <button class="edit" onclick="editRow('${key}')">تعديل</button>
-              <button class="contract" onclick="window.location.href='contract.html?id=${key}'">عقد</button>
-            </td>
-          `;
-          tableBody.appendChild(tr);
-        });
-      });
-    }
-
-    window.confirmRow = (id) => alert("✅ تم تأكيد الصف: " + id);
-
-    window.editRow = async (id) => {
-      const snapshot = await import('https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js').then(({ get }) => get(ref(db, 'clients/' + id)));
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        document.getElementById("clientName").value = data.name;
-        document.getElementById("clientPhone").value = data.phone;
-        document.getElementById("quoteImage").value = data.quote;
-        document.getElementById("drawingImage").value = data.drawing;
-      }
-    };
-
-    renderTable();
-  </script>
+    // Placeholder for editClient function
+    window.editClient = (id) => {
+      // In a real application, you'd typically navigate to an edit page or open a modal
+      // For example:
+      alert(`وظيفة التعديل للعميل بالكود: ${id} ستأتي هنا. يمكنك إعادة توجيه المستخدم لصفحة تعديل أو فتح نافذة منبثقة.`);
+      // window.location.href = `edit-client.html?id=${id}`;
+    };
+  </script>
 </body>
 </html>
