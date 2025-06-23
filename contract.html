@@ -1,43 +1,98 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8" />
-  <title>عقد العميل</title>
+  <meta charset="UTF-8">
+  <title>صفحة العقد</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    body { font-family: Arial; direction: rtl; padding: 20px; background-color: #f0f0f0; }
-    img { width: 300px; display: block; margin: 10px 0; border: 1px solid #ccc; }
-    .box { background: white; padding: 15px; border: 1px solid #aaa; }
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #f8f8f8;
+      padding: 40px;
+      text-align: center;
+    }
+    .container {
+      background: white;
+      max-width: 700px;
+      margin: auto;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #34495e;
+    }
+    input {
+      display: block;
+      margin: 15px auto;
+      padding: 10px;
+      width: 80%;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    img {
+      width: 150px;
+      margin-top: 15px;
+    }
   </style>
 </head>
 <body>
-  <div class="box">
-    <h2>عقد العميل</h2>
-    <p>الكود: <span id="code"></span></p>
-    <p>اسم العميل: <span id="name"></span></p>
-    <p>رقم الهاتف: <span id="phone"></span></p>
-    <p>📄 العقد:</p><img id="contractImg" />
-    <p>📊 الحسابات:</p><img id="accountsImg" />
+  <div class="container">
+    <h1>معلومات العقد</h1>
+    <p>الكود: <span id="clientId"></span></p>
+    <p>اسم العميل: <span id="clientName"></span></p>
+    <p>رقم الهاتف: <span id="clientPhone"></span></p>
+
+    <h3>صورة العقد</h3>
+    <input type="url" id="contractImage" placeholder="رابط صورة العقد">
+
+    <h3>صورة الحسابات</h3>
+    <input type="url" id="accountsImage" placeholder="رابط صورة الحسابات">
+
+    <button onclick="saveContract()">حفظ العقد</button>
   </div>
 
   <script type="module">
-    import { db } from "./firebase-config.js";
-    import {
-      collection, query, where, getDocs
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
 
-    const code = parseInt(localStorage.getItem("contractCode"));
-    const customersCollection = collection(db, "customers");
-    const q = query(customersCollection, where("code", "==", code));
-    const snapshot = await getDocs(q);
+    const firebaseConfig = {
+      apiKey: "AIzaSyDgOby-sJuIUs8iCErmqtiMbqMuND5ZtCo",
+      authDomain: "ala5tsas-alturkey-stats.firebaseapp.com",
+      databaseURL: "https://ala5tsas-alturkey-stats-default-rtdb.firebaseio.com",
+      projectId: "ala5tsas-alturkey-stats",
+      storageBucket: "ala5tsas-alturkey-stats.appspot.com",
+      messagingSenderId: "649675735929",
+      appId: "1:649675735929:web:f90a49614895c6958ea5a8",
+      measurementId: "G-X2FHKZT21J"
+    };
 
-    snapshot.forEach((doc) => {
-      const data = doc.data();
-      document.getElementById("code").innerText = data.code;
-      document.getElementById("name").innerText = data.name;
-      document.getElementById("phone").innerText = data.phone;
-      document.getElementById("contractImg").src = data.offer;
-      document.getElementById("accountsImg").src = data.drawing;
-    });
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const clientId = localStorage.getItem("contract_id");
+    const name = localStorage.getItem("contract_name");
+    const phone = localStorage.getItem("contract_phone");
+
+    document.getElementById("clientId").textContent = clientId;
+    document.getElementById("clientName").textContent = name;
+    document.getElementById("clientPhone").textContent = phone;
+
+    window.saveContract = () => {
+      const contractImage = document.getElementById("contractImage").value;
+      const accountsImage = document.getElementById("accountsImage").value;
+
+      const contractRef = ref(db, `contracts/${clientId}`);
+      set(contractRef, {
+        name,
+        phone,
+        contract: contractImage,
+        accounts: accountsImage
+      });
+
+      alert("تم حفظ العقد بنجاح!");
+    };
   </script>
 </body>
 </html>
+
