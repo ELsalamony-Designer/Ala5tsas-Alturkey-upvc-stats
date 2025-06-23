@@ -10,53 +10,120 @@
       background: #f2f2f2;
       margin: 0;
       padding: 20px;
+      direction: rtl; /* Ensure right-to-left direction for Arabic */
     }
     h1 {
       text-align: center;
       color: #333;
       margin-bottom: 30px;
+      font-weight: 700;
     }
     .search {
-      max-width: 500px;
-      margin: 0 auto 20px;
+      max-width: 600px;
+      margin: 0 auto 30px;
       display: flex;
-      gap: 10px;
+      gap: 15px;
+      align-items: center;
+      padding: 10px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
     input[type="text"] {
       flex: 1;
+      padding: 12px;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+      font-size: 17px;
+      text-align: right; /* Align text to the right for RTL */
+    }
+    .clients-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 25px;
+      max-width: 1200px;
+      margin: 0 auto;
       padding: 10px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
+    }
+    .client-card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      padding: 25px;
+      text-align: center;
+      transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .client-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    .client-card h3 {
+      color: #007bff;
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 22px;
+    }
+    .client-card p {
+      margin: 8px 0;
+      color: #555;
       font-size: 16px;
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
+    .client-card p strong {
+      color: #333;
+      font-weight: 600;
     }
-    th, td {
-      padding: 12px;
-      border: 1px solid #ddd;
-      text-align: center;
+    .client-card img {
+      max-width: 100px;
+      height: auto;
+      margin: 15px auto;
+      border-radius: 5px;
+      border: 1px solid #eee;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
-    th {
-      background: #007bff;
-      color: white;
-    }
-    img {
-      max-width: 80px;
+    .card-actions {
+      margin-top: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
     }
     button {
-      padding: 6px 12px;
-      margin: 2px;
+      padding: 10px 18px;
       border: none;
-      border-radius: 5px;
+      border-radius: 6px;
       cursor: pointer;
       font-weight: bold;
+      font-size: 15px;
+      transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+      flex-grow: 1; /* Allow buttons to grow and fill space */
+      max-width: 120px; /* Limit button width */
+    }
+    button:hover {
+      transform: translateY(-2px);
     }
     .confirm-btn { background: #28a745; color: white; }
+    .confirm-btn:hover { background: #218838; }
     .edit-btn { background: #ffc107; color: black; }
+    .edit-btn:hover { background: #e0a800; }
     .contract-btn { background: #17a2b8; color: white; }
+    .contract-btn:hover { background: #138496; }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .clients-grid {
+        grid-template-columns: 1fr; /* Stack cards on small screens */
+      }
+      .search {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      button {
+        max-width: none; /* Allow buttons to take full width on small screens */
+      }
+    }
   </style>
 </head>
 <body>
@@ -64,23 +131,12 @@
   <div class="search">
     <input type="text" id="searchInput" placeholder="ابحث باسم العميل أو الكود...">
   </div>
-  <table id="clientsTable">
-    <thead>
-      <tr>
-        <th>الكود</th>
-        <th>اسم العميل</th>
-        <th>رقم الهاتف</th>
-        <th>عرض السعر</th>
-        <th>الرسومات</th>
-        <th>العمليات</th>
-      </tr>
-    </thead>
-    <tbody id="tableBody"></tbody>
-  </table>
+  <div class="clients-grid" id="clientsGrid">
+      </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-    import { getDatabase, ref, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
+    import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDgOby-sJuIUs8iCErmqtiMbqMuND5ZtCo",
@@ -97,39 +153,43 @@
     const db = getDatabase(app);
     const clientsRef = ref(db, 'clients');
 
-    const tableBody = document.getElementById("tableBody");
+    const clientsGrid = document.getElementById("clientsGrid");
     const searchInput = document.getElementById("searchInput");
 
     onValue(clientsRef, (snapshot) => {
-      tableBody.innerHTML = "";
+      clientsGrid.innerHTML = ""; // Clear existing cards
       const data = snapshot.val();
       if (data) {
         Object.entries(data).forEach(([key, val]) => {
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${val.code}</td>
-            <td>${val.name}</td>
-            <td>${val.phone}</td>
-            <td><img src="${val.quotation}" alt="عرض السعر"></td>
-            <td><img src="${val.drawings}" alt="الرسومات"></td>
-            <td>
+          const clientCard = document.createElement("div");
+          clientCard.classList.add("client-card");
+          clientCard.setAttribute('data-name', val.name.toLowerCase());
+          clientCard.setAttribute('data-code', val.code.toLowerCase());
+
+          clientCard.innerHTML = `
+            <h3>${val.name}</h3>
+            <p><strong>الكود:</strong> ${val.code}</p>
+            <p><strong>رقم الهاتف:</strong> ${val.phone}</p>
+            ${val.quotation ? `<img src="${val.quotation}" alt="عرض السعر">` : '<p>لا يوجد عرض سعر</p>'}
+            ${val.drawings ? `<img src="${val.drawings}" alt="الرسومات">` : '<p>لا توجد رسومات</p>'}
+            <div class="card-actions">
               <button class="confirm-btn" onclick="confirmClient('${key}')">تأكيد</button>
               <button class="edit-btn" onclick="editClient('${key}')">تعديل</button>
               <button class="contract-btn" onclick="goToContract('${key}')">عقد</button>
-            </td>
+            </div>
           `;
-          tableBody.appendChild(row);
+          clientsGrid.appendChild(clientCard);
         });
       }
     });
 
     searchInput.addEventListener("input", () => {
       const value = searchInput.value.toLowerCase();
-      const rows = tableBody.querySelectorAll("tr");
-      rows.forEach(row => {
-        const name = row.children[1].textContent.toLowerCase();
-        const code = row.children[0].textContent.toLowerCase();
-        row.style.display = name.includes(value) || code.includes(value) ? "" : "none";
+      const cards = clientsGrid.querySelectorAll(".client-card");
+      cards.forEach(card => {
+        const name = card.getAttribute('data-name');
+        const code = card.getAttribute('data-code');
+        card.style.display = name.includes(value) || code.includes(value) ? "flex" : "none"; // Use flex as display for card
       });
     });
 
@@ -137,12 +197,11 @@
       window.location.href = `contract.html?id=${id}`;
     };
 
-    // Placeholder for confirmClient function
     window.confirmClient = async (id) => {
       if (confirm("هل أنت متأكد أنك تريد تأكيد هذا العميل؟")) {
         try {
-          // Example: Update a 'confirmed' status in Firebase
-          await update(ref(db, `clients/${id}`), { confirmed: true });
+          // يمكنك تحديث أي خاصية هنا، مثلاً تغيير حالة العميل إلى "مؤكد"
+          await update(ref(db, `clients/${id}`), { status: 'confirmed' });
           alert("تم تأكيد العميل بنجاح!");
         } catch (error) {
           console.error("Error confirming client:", error);
@@ -151,11 +210,9 @@
       }
     };
 
-    // Placeholder for editClient function
     window.editClient = (id) => {
-      // In a real application, you'd typically navigate to an edit page or open a modal
-      // For example:
-      alert(`وظيفة التعديل للعميل بالكود: ${id} ستأتي هنا. يمكنك إعادة توجيه المستخدم لصفحة تعديل أو فتح نافذة منبثقة.`);
+      alert(`ستنتقل لصفحة تعديل العميل بالكود: ${id}`);
+      // في تطبيق حقيقي، يمكنك التوجيه إلى صفحة تعديل:
       // window.location.href = `edit-client.html?id=${id}`;
     };
   </script>
