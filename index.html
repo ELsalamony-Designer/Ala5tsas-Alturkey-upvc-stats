@@ -6,85 +6,117 @@
   <title>الرئيسية | إدارة العملاء</title>
   <link rel="stylesheet" href="style.css" />
   <script type="module" src="firebase-config.js"></script>
-  <script type="module">
-    import { getDatabase, ref, set, remove, get, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-    import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
-    import { database, storage } from './firebase-config.js';
+ <script type="module">
+  import { getDatabase, ref, set, remove, get, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+  import { database, storage } from './firebase-config.js';
 
-    let rowCount = 0;
+  let rowCount = 0;
 
-    window.addRow = function () {
-      const table = document.getElementById("tableBody");
-      const row = table.insertRow();
-      const code = ++rowCount;
+  // إضافة صف جديد
+  window.addRow = function () {
+    const table = document.getElementById("tableBody");
+    const row = table.insertRow();
+    const code = ++rowCount;
 
-      row.innerHTML = `
-        <td>${code}</td>
-        <td><input type="text" id="name-${code}"></td>
-        <td><input type="text" id="phone-${code}"></td>
-        <td><input type="file" id="offer-${code}" accept="image/*"></td>
-        <td><input type="file" id="drawing-${code}" accept="image/*"></td>
-        <td><button onclick="confirmRow(${code})">تأكيد</button></td>
-        <td><button onclick="editRow(${code})">تعديل</button></td>
-        <td><button onclick="sendToContract(${code})">عقد</button></td>
-      `;
+    row.innerHTML = `
+      <td>${code}</td>
+      <td><input type="text" id="name-${code}"></td>
+      <td><input type="text" id="phone-${code}"></td>
+      <td><input type="file" id="offer-${code}" accept="image/*"></td>
+      <td><input type="file" id="drawing-${code}" accept="image/*"></td>
+      <td><button onclick="confirmRow(${code})">تأكيد</button></td>
+      <td><button onclick="editRow(${code})">تعديل</button></td>
+      <td><button onclick="sendToContract(${code})">عقد</button></td>
+    `;
+  };
+
+  // تأكيد الصف: حفظ + تثبيت
+  window.confirmRow = async function (code) {
+    const nameInput = document.getElementById(`name-${code}`);
+    const phoneInput = document.getElementById(`phone-${code}`);
+    const offerInput = document.getElementById(`offer-${code}`);
+    const drawInput = document.getElementById(`drawing-${code}`);
+
+    const name = nameInput.value;
+    const phone = phoneInput.value;
+    const offer = offerInput.files[0];
+    const drawing = drawInput.files[0];
+
+    if (!name || !phone || !offer || !drawing) {
+      alert("يرجى ملء كل الحقول ورفع الصور");
+      return;
     }
 
-    window.confirmRow = async function (code) {
-      const name = document.getElementById(`name-${code}`).value;
-      const phone = document.getElementById(`phone-${code}`).value;
-      const offer = document.getElementById(`offer-${code}`).files[0];
-      const drawing = document.getElementById(`drawing-${code}`).files[0];
+    const offerRef = sRef(storage, `offers/${code}-${offer.name}`);
+    const drawRef = sRef(storage, `drawings/${code}-${drawing.name}`);
 
-      if (!name || !phone || !offer || !drawing) {
-        alert("يرجى ملء كل الحقول ورفع الصور");
-        return;
-      }
+    await uploadBytes(offerRef, offer);
+    await uploadBytes(drawRef, drawing);
 
-      const offerRef = sRef(storage, `offers/${code}-${offer.name}`);
-      const drawRef = sRef(storage, `drawings/${code}-${drawing.name}`);
+    const offerURL = await getDownloadURL(offerRef);
+    const drawURL = await getDownloadURL(drawRef);
 
-      await uploadBytes(offerRef, offer);
-      await uploadBytes(drawRef, drawing);
+    await set(ref(database, "clients/" + code), {
+      name: name,
+      phone: phone,
+      offerImage: offerURL,
+      drawingImage: drawURL
+    });
 
-      const offerURL = await getDownloadURL(offerRef);
-      const drawURL = await getDownloadURL(drawRef);
+    // تحويل الخانات لنصوص
+    const row = nameInput.parentElement.parentElement;
+    row.children[1].innerText = name;
+    row.children[2].innerText = phone;
+    row.children[3].innerHTML = `<img src="${offerURL}" />`;
+    row.children[4].innerHTML = `<img src="${drawURL}" />`;
 
-      await set(ref(database, "clients/" + code), {
-        name: name,
-        phone: phone,
-        offerImage: offerURL,
-        drawingImage: drawURL
-      });
+    alert("تم الحفظ وتثبيت البيانات");
+  };
 
-      alert("تم الحفظ!");
-    }
-
-    window.editRow = function (code) {
-      alert("يمكنك تعديل الحقول مباشرة ثم الضغط على تأكيد.");
-    }
-
-    window.sendToContract = async function (code) {
-      const dbRef = ref(database);
-      const snapshot = await get(child(dbRef, `clients/${code}`));
+  // تعديل الحقول مرة تانية
+  window.editRow = function (code) {
+    const dbRef = ref(database);
+    get(child(dbRef, `clients/${code}`)).then((snapshot) => {
       if (!snapshot.exists()) {
-        alert("البيانات غير موجودة");
+        alert("البيانات غير موجودة بعد، اضغط تأكيد أولاً");
         return;
       }
 
       const data = snapshot.val();
-      await set(ref(database, "contracts/" + code), {
-        name: data.name,
-        phone: data.phone,
-        contractImage: data.offerImage,
-        accountsImage: data.drawingImage
-      });
+      const row = document.querySelector(`#tableBody tr:nth-child(${code})`);
 
-      await remove(ref(database, "clients/" + code));
-      alert("تم النقل لصفحة العقود");
-      location.reload();
+      row.children[1].innerHTML = `<input type="text" id="name-${code}" value="${data.name}">`;
+      row.children[2].innerHTML = `<input type="text" id="phone-${code}" value="${data.phone}">`;
+      row.children[3].innerHTML = `<input type="file" id="offer-${code}" accept="image/*">`;
+      row.children[4].innerHTML = `<input type="file" id="drawing-${code}" accept="image/*">`;
+    });
+  };
+
+  // نقل إلى صفحة العقود
+  window.sendToContract = async function (code) {
+    const dbRef = ref(database);
+    const snapshot = await get(child(dbRef, `clients/${code}`));
+    if (!snapshot.exists()) {
+      alert("البيانات غير موجودة، اضغط تأكيد أولاً");
+      return;
     }
-  </script>
+
+    const data = snapshot.val();
+
+    await set(ref(database, "contracts/" + code), {
+      name: data.name,
+      phone: data.phone,
+      contractImage: data.offerImage,
+      accountsImage: data.drawingImage
+    });
+
+    await remove(ref(database, "clients/" + code));
+    alert("تم النقل إلى صفحة العقود");
+    location.reload();
+  };
+</script>
+
 </head>
 <body>
   <h2>إدارة العملاء</h2>
