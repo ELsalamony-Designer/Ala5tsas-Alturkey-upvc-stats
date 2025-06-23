@@ -1,361 +1,218 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-    <meta charset="UTF-8">
-    <title>إدارة العملاء</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        /* أنماط CSS لتحسين مظهر الصفحة والتصميم المتجاوب */
-        body {
-            font-family: 'Cairo', sans-serif;
-            background: #f0f0f0;
-            direction: rtl; /* لجعل التخطيط من اليمين لليسار */
-            padding: 20px;
-            margin: 0;
-        }
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 30px;
-        }
-        form {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
-            max-width: 700px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        form input {
-            display: block;
-            width: calc(100% - 22px); /* خصم البادينج والبوردور */
-            margin: 10px 0;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 1em;
-        }
-        form button[type="submit"] {
-            padding: 12px;
-            width: 100%;
-            background: #28a745; /* لون أخضر جذاب */
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 1.1em;
-            transition: background 0.3s ease;
-        }
-        form button[type="submit"]:hover {
-            background: #218838; /* لون أغمق عند المرور بالماوس */
-        }
-        table {
-            width: 100%;
-            background: white;
-            border-collapse: collapse;
-            margin-top: 20px;
-            max-width: 1000px; /* عرض أكبر للجدول لاستيعاب الصور والأزرار */
-            margin-left: auto;
-            margin-right: auto;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            border-radius: 12px;
-            overflow: hidden; /* عشان الـ border-radius يشتغل صح على الجدول */
-        }
-        th, td {
-            border: 1px solid #eee; /* حدود فاتحة للجدول */
-            padding: 12px;
-            text-align: center;
-            vertical-align: middle; /* توسيط المحتوى عمودياً */
-        }
-        th {
-            background: #f8f8f8; /* خلفية فاتحة لرأس الجدول */
-            color: #333;
-            font-weight: bold;
-            font-size: 1.05em;
-        }
-        tr:nth-child(even) {
-            background-color: #f9f9f9; /* لون مختلف للصفوف الفردية والزوجية */
-        }
-        .action {
-            margin: 3px;
-            padding: 8px 12px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1em; /* حجم مناسب للأيقونات */
-            transition: background 0.3s ease, transform 0.2s ease;
-        }
-        .action:hover {
-            transform: translateY(-2px); /* تأثير بسيط عند المرور بالماوس */
-        }
-        .edit { background: #ffc107; color: #333; } /* أصفر */
-        .edit:hover { background: #e0a800; }
-        .delete { background: #dc3545; color: white; } /* أحمر */
-        .delete:hover { background: #c82333; }
-        .contract { background: #007bff; color: white; } /* أزرق */
-        .contract:hover { background: #0056b3; }
-        td img {
-            max-width: 80px; /* حجم الصور في الجدول */
-            height: auto;
-            display: block;
-            margin: 0 auto; /* توسيط الصورة داخل الخلية */
-            border-radius: 4px;
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-        }
-        td a {
-            text-decoration: none; /* إزالة خط تحت الرابط */
-            color: inherit; /* استخدام نفس لون النص */
-        }
-        /* تصميم متجاوب (Responsive Design) */
-        @media (max-width: 768px) {
-            table, form {
-                margin: 20px 10px; /* هوامش أقل على الشاشات الصغيرة */
-                padding: 15px;
-            }
-            th, td {
-                padding: 8px;
-                font-size: 0.9em;
-            }
-            td img {
-                max-width: 50px; /* تصغير حجم الصور أكثر على الجوال */
-            }
-            .action {
-                padding: 6px 8px;
-                font-size: 0.9em;
-            }
-        }
-        @media (max-width: 480px) {
-            body {
-                padding: 10px;
-            }
-            h1 {
-                font-size: 1.8em;
-            }
-            form input, form button {
-                font-size: 0.9em;
-                padding: 8px;
-            }
-            table {
-                display: block;
-                overflow-x: auto; /* لجعل الجدول قابل للتمرير أفقياً */
-                white-space: nowrap; /* لمنع المحتوى من الالتفاف */
-            }
-            /* ممكن تخفي بعض الأعمدة أو تعمل لها تخطيط مختلف هنا */
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>نظام إدارة العملاء</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: #f0f2f5;
+      margin: 0;
+      padding: 20px;
+      direction: rtl;
+    }
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+    }
+    .form-container {
+      background: white;
+      padding: 20px;
+      margin-bottom: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input[type="text"] {
+      padding: 10px;
+      margin: 5px;
+      width: calc(100% - 22px);
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      padding: 10px 15px;
+      margin: 5px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .add { background: #3498db; color: white; }
+    .edit { background: #f1c40f; }
+    .delete { background: #e74c3c; color: white; }
+    .contract { background: #2ecc71; color: white; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background: #2980b9;
+      color: white;
+    }
+    img {
+      max-width: 70px;
+      max-height: 70px;
+    }
+  </style>
 </head>
 <body>
 
-    <h1>نظام إدارة العملاء</h1>
+<h1>نظام إدارة العملاء</h1>
 
-    <form id="clientForm">
-        <input type="text" id="name" placeholder="اسم العميل" required>
-        <input type="text" id="phone" placeholder="رقم الهاتف" required>
-        <input type="url" id="estimate" placeholder="رابط صورة عرض السعر" required>
-        <input type="url" id="drawings" placeholder="رابط صورة الرسومات" required>
-        <button type="submit">➕ إضافة عميل</button>
-    </form>
+<div class="form-container">
+  <input type="text" id="clientName" placeholder="اسم العميل">
+  <input type="text" id="clientPhone" placeholder="رقم الهاتف">
+  <input type="text" id="estimateURL" placeholder="رابط صورة عرض السعر">
+  <input type="text" id="drawingsURL" placeholder="رابط صورة الرسومات">
+  <button class="add" id="addBtn">➕ إضافة عميل</button>
+</div>
 
-    <table id="clientsTable">
-        <thead>
-            <tr>
-                <th>الكود</th>
-                <th>الاسم</th>
-                <th>رقم الهاتف</th>
-                <th>عرض السعر</th>
-                <th>الرسومات</th>
-                <th>خيارات</th>
-            </tr>
-        </thead>
-        <tbody>
-            </tbody>
-    </table>
+<input type="text" id="searchInput" placeholder="ابحث بالاسم أو الكود">
+<table id="clientsTable">
+  <thead>
+    <tr>
+      <th>الكود</th>
+      <th>اسم العميل</th>
+      <th>رقم الهاتف</th>
+      <th>عرض السعر</th>
+      <th>الرسومات</th>
+      <th>الخيارات</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
 
-    <script type="module">
-        // استيراد الدوال اللازمة من Firebase SDK
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-        import {
-            getDatabase, ref, push, onValue, set, remove, get, child
-        } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
-        // يمكن إضافة getAnalytics إذا كنت ترغب في تتبع التحليلات
-        // import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-analytics.js";
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+  import { getDatabase, ref, onValue, remove, set, push, get, child } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
-        // **هام جدًا للأمان:**
-        // بيانات تهيئة Firebase هذه ظاهرة في الواجهة الأمامية.
-        // يجب أن تكون قواعد أمان Firebase (Firebase Security Rules) الخاصة بك
-        // مضبوطة بدقة شديدة لمنع الوصول غير المصرح به لقاعدة بياناتك.
-        const firebaseConfig = {
-            apiKey: "AIzaSyDgOby-sJuIUs8iCErmqtiMbqMuND5ZtCo",
-            authDomain: "ala5tsas-alturkey-stats.firebaseapp.com",
-            databaseURL: "https://ala5tsas-alturkey-stats-default-rtdb.firebaseio.com",
-            projectId: "ala5tsas-alturkey-stats",
-            storageBucket: "ala5tsas-alturkey-stats.appspot.com",
-            messagingSenderId: "649675735929",
-            appId: "1:649675735929:web:f90a49614895c6958ea5a8",
-            measurementId: "G-X2FHKZT21J"
-        };
+  const firebaseConfig = {
+    apiKey: "AIzaSyDgOby-sJuIUs8iCErmqtiMbqMuND5ZtCo",
+    authDomain: "ala5tsas-alturkey-stats.firebaseapp.com",
+    databaseURL: "https://ala5tsas-alturkey-stats-default-rtdb.firebaseio.com",
+    projectId: "ala5tsas-alturkey-stats",
+    storageBucket: "ala5tsas-alturkey-stats.appspot.com",
+    messagingSenderId: "649675735929",
+    appId: "1:649675735929:web:f90a49614895c6958ea5a8",
+    measurementId: "G-X2FHKZT21J"
+  };
 
-        // تهيئة Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const clientsRef = ref(db, 'clients'); // مرجع لفرع 'clients' في قاعدة البيانات
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const clientsRef = ref(db, 'clients');
+  const contractsRef = ref(db, 'contracts');
 
-        // الحصول على عناصر DOM
-        const form = document.getElementById("clientForm");
-        const tbody = document.querySelector("#clientsTable tbody");
+  const tbody = document.querySelector("#clientsTable tbody");
+  const searchInput = document.getElementById("searchInput");
+  const addBtn = document.getElementById("addBtn");
 
-        // دالة لإضافة عميل جديد
-        form.addEventListener("submit", async (e) => {
-            e.preventDefault(); // منع الإرسال الافتراضي للنموذج
-            const name = document.getElementById("name").value.trim(); // استخدام trim لإزالة المسافات البيضاء الزائدة
-            const phone = document.getElementById("phone").value.trim();
-            const estimate = document.getElementById("estimate").value.trim();
-            const drawings = document.getElementById("drawings").value.trim();
+  function renderClients(data) {
+    tbody.innerHTML = "";
+    Object.entries(data).forEach(([id, client]) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${client.code}</td>
+        <td>${client.name}</td>
+        <td>${client.phone}</td>
+        <td><img src="${client.estimate}" alt="عرض السعر"></td>
+        <td><img src="${client.drawings}" alt="الرسومات"></td>
+        <td>
+          <button class="edit" data-id="${id}">تعديل</button>
+          <button class="delete" data-id="${id}">حذف</button>
+          <button class="contract" data-id="${id}">تأكيد العقد</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
 
-            if (!name || !phone || !estimate || !drawings) {
-                alert("الرجاء ملء جميع الحقول.");
-                return;
-            }
+  onValue(clientsRef, snapshot => {
+    const data = snapshot.val();
+    if (data) renderClients(data);
+  });
 
-            // إنشاء مرجع جديد (key فريد) للعميل في Firebase
-            const newClientRef = push(clientsRef);
-            try {
-                await set(newClientRef, {
-                    code: newClientRef.key, // استخدام الـ key الفريد ككود للعميل
-                    name,
-                    phone,
-                    estimate,
-                    drawings
-                });
-                form.reset(); // إفراغ النموذج بعد الإضافة بنجاح
-                alert("✅ تم إضافة العميل بنجاح!");
-            } catch (error) {
-                console.error("خطأ في إضافة العميل:", error);
-                alert("❌ حدث خطأ أثناء إضافة العميل.");
-            }
-        });
+  addBtn.addEventListener("click", () => {
+    const name = document.getElementById("clientName").value;
+    const phone = document.getElementById("clientPhone").value;
+    const estimate = document.getElementById("estimateURL").value;
+    const drawings = document.getElementById("drawingsURL").value;
+    if (!name || !phone || !estimate || !drawings) return alert("يرجى تعبئة جميع الحقول");
 
-        // دالة لحذف عميل
-        const deleteClient = async (id) => {
-            if (confirm("هل أنت متأكد أنك تريد حذف هذا العميل؟")) {
-                try {
-                    await remove(ref(db, 'clients/' + id));
-                    alert("✅ تم حذف العميل بنجاح.");
-                } catch (error) {
-                    console.error("خطأ في حذف العميل:", error);
-                    alert("❌ حدث خطأ أثناء حذف العميل.");
-                }
-            }
-        };
+    const newRef = push(clientsRef);
+    set(newRef, {
+      code: newRef.key,
+      name,
+      phone,
+      estimate,
+      drawings
+    });
 
-        // دالة لتعديل بيانات عميل
-        const editClient = async (id) => {
-            const snapshot = await get(child(ref(db), `clients/${id}`));
-            if (snapshot.exists()) {
-                const client = snapshot.val();
-                // استخدام prompt للحصول على البيانات الجديدة
-                const newName = prompt("ادخل الاسم الجديد:", client.name);
-                const newPhone = prompt("ادخل رقم الهاتف الجديد:", client.phone);
-                const newEstimate = prompt("ادخل رابط صورة عرض السعر الجديد:", client.estimate);
-                const newDrawings = prompt("ادخل رابط صورة الرسومات الجديد:", client.drawings);
+    document.getElementById("clientName").value = "";
+    document.getElementById("clientPhone").value = "";
+    document.getElementById("estimateURL").value = "";
+    document.getElementById("drawingsURL").value = "";
+  });
 
-                // التحقق من أن المستخدم لم يلغِ أي من عمليات الإدخال وأن الحقول ليست فارغة
-                if (newName !== null && newPhone !== null && newEstimate !== null && newDrawings !== null &&
-                    newName.trim() !== "" && newPhone.trim() !== "" && newEstimate.trim() !== "" && newDrawings.trim() !== "") {
-                    try {
-                        await set(ref(db, 'clients/' + id), {
-                            code: id, // الكود يظل كما هو (المعرف الفريد)
-                            name: newName.trim(),
-                            phone: newPhone.trim(),
-                            estimate: newEstimate.trim(),
-                            drawings: newDrawings.trim()
-                        });
-                        alert("✅ تم تحديث بيانات العميل بنجاح.");
-                    } catch (error) {
-                        console.error("خطأ في تحديث العميل:", error);
-                        alert("❌ حدث خطأ أثناء تحديث العميل.");
-                    }
-                } else {
-                    alert("لم يتم تحديث البيانات لأن أحد الحقول كان فارغًا أو تم الإلغاء.");
-                }
-            } else {
-                alert("لم يتم العثور على العميل المراد تعديله.");
-            }
-        };
+  tbody.addEventListener("click", async (e) => {
+    const id = e.target.dataset.id;
+    if (e.target.classList.contains("delete")) {
+      if (confirm("هل أنت متأكد من الحذف؟")) {
+        await remove(ref(db, 'clients/' + id));
+      }
+    } else if (e.target.classList.contains("edit")) {
+      const snapshot = await get(child(ref(db), 'clients/' + id));
+      if (snapshot.exists()) {
+        const client = snapshot.val();
+        const name = prompt("الاسم:", client.name);
+        const phone = prompt("رقم الهاتف:", client.phone);
+        const estimate = prompt("رابط عرض السعر:", client.estimate);
+        const drawings = prompt("رابط الرسومات:", client.drawings);
+        if (name && phone && estimate && drawings) {
+          set(ref(db, 'clients/' + id), {
+            code: id,
+            name,
+            phone,
+            estimate,
+            drawings
+          });
+        }
+      }
+    } else if (e.target.classList.contains("contract")) {
+      const snapshot = await get(child(ref(db), 'clients/' + id));
+      if (snapshot.exists()) {
+        const client = snapshot.val();
+        const contract = prompt("رابط صورة العقد:");
+        const accounts = prompt("رابط صورة الحسابات:");
+        if (contract && accounts) {
+          await set(ref(db, 'contracts/' + id), {
+            code: client.code,
+            name: client.name,
+            phone: client.phone,
+            contract,
+            accounts
+          });
+          window.location.href = 'contract.html';
+        }
+      }
+    }
+  });
 
-        // دالة لتأكيد عقد العميل ونقله إلى قسم العقود
-        const confirmContract = async (id) => {
-            const snapshot = await get(child(ref(db), `clients/${id}`));
-            if (snapshot.exists()) {
-                const client = snapshot.val();
-                const contractLink = prompt("ادخل رابط صورة العقد:");
-                const accountsLink = prompt("ادخل رابط صورة الحسابات:");
-
-                if (contractLink && accountsLink && contractLink.trim() !== "" && accountsLink.trim() !== "") {
-                    try {
-                        await set(ref(db, 'contracts/' + id), { // نقل البيانات إلى فرع 'contracts'
-                            code: client.code,
-                            name: client.name,
-                            phone: client.phone,
-                            contract: contractLink.trim(),
-                            accounts: accountsLink.trim()
-                        });
-                        // يمكنك اختيار حذف العميل من قائمة العملاء بعد نقله للعقود
-                        // await remove(ref(db, 'clients/' + id));
-                        alert("✅ تم نقل العميل للعقودات بنجاح!");
-                        window.location.href = "contract.html"; // الانتقال لصفحة العقود (تأكد من وجودها)
-                    } catch (error) {
-                        console.error("خطأ في نقل العميل للعقود:", error);
-                        alert("❌ حدث خطأ أثناء نقل العميل للعقود.");
-                    }
-                } else {
-                    alert("يجب إدخال رابط العقد ورابط الحسابات بشكل صحيح.");
-                }
-            } else {
-                alert("لم يتم العثور على العميل المراد تأكيد عقده.");
-            }
-        };
-
-        // الاستماع للتغيرات في قاعدة بيانات العملاء وعرضها في الجدول
-        onValue(clientsRef, (snapshot) => {
-            const data = snapshot.val(); // الحصول على البيانات من Firebase
-            tbody.innerHTML = ""; // تفريغ الجدول بالكامل قبل إعادة بنائه
-
-            if (data) {
-                // تكرار على كل عميل في البيانات وعرضه كصف في الجدول
-                Object.entries(data).forEach(([id, client]) => {
-                    const tr = document.createElement("tr"); // إنشاء صف جديد
-                    tr.innerHTML = `
-                        <td>${client.code}</td>
-                        <td>${client.name}</td>
-                        <td>${client.phone}</td>
-                        <td><a href="${client.estimate}" target="_blank"><img src="${client.estimate}" alt="عرض السعر"></a></td>
-                        <td><a href="${client.drawings}" target="_blank"><img src="${client.drawings}" alt="الرسومات"></a></td>
-                        <td>
-                            <button class="action edit" data-id="${id}">✏️</button>
-                            <button class="action delete" data-id="${id}">🗑️</button>
-                            <button class="action contract" data-id="${id}">📄</button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr); // إضافة الصف إلى جسم الجدول
-
-                    // إضافة مستمعي الأحداث للأزرار بعد إضافتها إلى DOM
-                    tr.querySelector(".edit").addEventListener("click", () => editClient(id));
-                    tr.querySelector(".delete").addEventListener("click", () => deleteClient(id));
-                    tr.querySelector(".contract").addEventListener("click", () => confirmContract(id));
-                });
-            } else {
-                // رسالة إذا لم يكن هناك عملاء
-                const tr = document.createElement("tr");
-                tr.innerHTML = `<td colspan="6">لا يوجد عملاء لعرضهم حاليًا.</td>`;
-                tbody.appendChild(tr);
-            }
-        });
-    </script>
-
+  searchInput.addEventListener("input", () => {
+    const filter = searchInput.value.toLowerCase();
+    const rows = tbody.querySelectorAll("tr");
+    rows.forEach(row => {
+      const name = row.children[1].textContent.toLowerCase();
+      const code = row.children[0].textContent.toLowerCase();
+      row.style.display = name.includes(filter) || code.includes(filter) ? "" : "none";
+    });
+  });
+</script>
 </body>
 </html>
