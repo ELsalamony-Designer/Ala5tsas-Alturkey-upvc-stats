@@ -90,120 +90,121 @@
 
   <script type="module" src="firebase-config.js"></script>
   <script type="module">
-    import { getDatabase, ref, set, remove, get, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-    import { database } from './firebase-config.js';
+  import { getDatabase, ref, set, remove, get, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  import { database } from './firebase-config.js';
 
-    let rowCount = 0;
+  let rowCount = 0;
 
-    window.addRow = function () {
-      const tableBody = document.getElementById("tableBody");
-      let nextCode = 1;
-      if (tableBody.rows.length > 0) {
-        const lastCode = parseInt(tableBody.rows[tableBody.rows.length - 1].cells[0].innerText);
-        nextCode = lastCode + 1;
-      }
-      if (nextCode <= rowCount) nextCode = rowCount + 1;
-
-      const row = tableBody.insertRow();
-      row.setAttribute('data-code', nextCode);
-      row.innerHTML = `
-        <td>${nextCode}</td>
-        <td><input type="text" id="name-${nextCode}" placeholder="اسم العميل"></td>
-        <td><input type="text" id="phone-${nextCode}" placeholder="رقم الهاتف"></td>
-        <td><input type="text" id="offer-${nextCode}" placeholder="رابط عرض السعر"></td>
-        <td><input type="text" id="drawing-${nextCode}" placeholder="رابط الرسومات"></td>
-        <td class="actions">
-          <button onclick="confirmRow('${nextCode}')" class="confirm-btn">تأكيد</button>
-          <button onclick="editRow('${nextCode}')" class="edit-btn">تعديل</button>
-          <button onclick="sendToContract('${nextCode}')" class="contract-btn">عقد</button>
-        </td>`;
-      rowCount = nextCode;
-    };
-
-    window.confirmRow = async function (code) {
-      const name = document.getElementById(name-${code}).value.trim();
-      const phone = document.getElementById(phone-${code}).value.trim();
-      const offer = document.getElementById(offer-${code}).value.trim();
-      const drawing = document.getElementById(drawing-${code}).value.trim();
-      if (!name || !phone || !offer || !drawing) {
-        alert("يرجى ملء جميع الحقول");
-        return;
-      }
-      await set(ref(database, "clients/" + code), {
-        name: name,
-        phone: phone,
-        offerImage: offer,
-        drawingImage: drawing
-      });
-      alert("✅ تم حفظ البيانات");
-      location.reload();
-    };
-
-    window.editRow = async function (code) {
-      const snapshot = await get(child(ref(database), clients/${code}));
-      if (!snapshot.exists()) return;
-      const data = snapshot.val();
-      const row = document.querySelector(tr[data-code='${code}']);
-      row.children[1].innerHTML = <input type="text" id="name-${code}" value="${data.name}">;
-      row.children[2].innerHTML = <input type="text" id="phone-${code}" value="${data.phone}">;
-      row.children[3].innerHTML = <input type="text" id="offer-${code}" value="${data.offerImage}">;
-      row.children[4].innerHTML = <input type="text" id="drawing-${code}" value="${data.drawingImage}">;
-    };
-
-    window.sendToContract = async function (code) {
-      if (!confirm("هل تريد نقل العميل إلى العقود؟")) return;
-      const snapshot = await get(child(ref(database), clients/${code}));
-      if (!snapshot.exists()) return;
-      const data = snapshot.val();
-      await set(ref(database, "contracts/" + code), {
-        name: data.name,
-        phone: data.phone,
-        contractImage: data.offerImage,
-        accountsImage: data.drawingImage
-      });
-      await remove(ref(database, "clients/" + code));
-      alert("✅ تم النقل");
-      location.reload();
-    };
-
-    function filterTable() {
-      const value = document.getElementById("search").value.toLowerCase();
-      const rows = document.querySelectorAll("#tableBody tr");
-      rows.forEach(row => {
-        const name = row.children[1]?.innerText?.toLowerCase() || "";
-        const phone = row.children[2]?.innerText?.toLowerCase() || "";
-        row.style.display = (name.includes(value) || phone.includes(value)) ? "" : "none";
-      });
+  window.addRow = function () {
+    const tableBody = document.getElementById("tableBody");
+    let nextCode = 1;
+    if (tableBody.rows.length > 0) {
+      const lastCode = parseInt(tableBody.rows[tableBody.rows.length - 1].cells[0].innerText);
+      nextCode = lastCode + 1;
     }
+    if (nextCode <= rowCount) nextCode = rowCount + 1;
 
-    window.onload = function () {
-      document.getElementById("search").addEventListener("input", filterTable);
-      const dbRef = ref(database, "clients");
-      const tableBody = document.getElementById("tableBody");
-      get(dbRef).then(snapshot => {
-        if (snapshot.exists()) {
-          snapshot.forEach(childSnap => {
-            const code = childSnap.key;
-            const data = childSnap.val();
-            const row = tableBody.insertRow();
-            row.setAttribute('data-code', code);
-            row.innerHTML = `
-              <td>${code}</td>
-              <td>${data.name}</td>
-              <td>${data.phone}</td>
-              <td><img src="${data.offerImage}" alt="عرض السعر" /></td>
-              <td><img src="${data.drawingImage}" alt="الرسومات" /></td>
-              <td class="actions">
-                <button onclick="confirmRow('${code}')" class="confirm-btn">تأكيد</button>
-                <button onclick="editRow('${code}')" class="edit-btn">تعديل</button>
-                <button onclick="sendToContract('${code}')" class="contract-btn">عقد</button>
-              </td>`;
-            if (+code > rowCount) rowCount = +code;
-          });
-        }
-      });
-    };
-  </script>
+    const row = tableBody.insertRow();
+    row.setAttribute('data-code', nextCode);
+    row.innerHTML = `
+      <td>${nextCode}</td>
+      <td><input type="text" id="name-${nextCode}" placeholder="اسم العميل"></td>
+      <td><input type="text" id="phone-${nextCode}" placeholder="رقم الهاتف"></td>
+      <td><input type="text" id="offer-${nextCode}" placeholder="رابط عرض السعر"></td>
+      <td><input type="text" id="drawing-${nextCode}" placeholder="رابط الرسومات"></td>
+      <td class="actions">
+        <button onclick="confirmRow('${nextCode}')" class="confirm-btn">تأكيد</button>
+        <button onclick="editRow('${nextCode}')" class="edit-btn">تعديل</button>
+        <button onclick="sendToContract('${nextCode}')" class="contract-btn">عقد</button>
+      </td>`;
+    rowCount = nextCode;
+  };
+
+  window.confirmRow = async function (code) {
+    const name = document.getElementById(`name-${code}`).value.trim();
+    const phone = document.getElementById(`phone-${code}`).value.trim();
+    const offer = document.getElementById(`offer-${code}`).value.trim();
+    const drawing = document.getElementById(`drawing-${code}`).value.trim();
+    if (!name || !phone || !offer || !drawing) {
+      alert("يرجى ملء جميع الحقول");
+      return;
+    }
+    await set(ref(database, "clients/" + code), {
+      name: name,
+      phone: phone,
+      offerImage: offer,
+      drawingImage: drawing
+    });
+    alert("✅ تم حفظ البيانات");
+    location.reload();
+  };
+
+  window.editRow = async function (code) {
+    const snapshot = await get(child(ref(database), `clients/${code}`));
+    if (!snapshot.exists()) return;
+    const data = snapshot.val();
+    const row = document.querySelector(`tr[data-code='${code}']`);
+    row.children[1].innerHTML = `<input type="text" id="name-${code}" value="${data.name}">`;
+    row.children[2].innerHTML = `<input type="text" id="phone-${code}" value="${data.phone}">`;
+    row.children[3].innerHTML = `<input type="text" id="offer-${code}" value="${data.offerImage}">`;
+    row.children[4].innerHTML = `<input type="text" id="drawing-${code}" value="${data.drawingImage}">`;
+  };
+
+  window.sendToContract = async function (code) {
+    if (!confirm("هل تريد نقل العميل إلى العقود؟")) return;
+    const snapshot = await get(child(ref(database), `clients/${code}`));
+    if (!snapshot.exists()) return;
+    const data = snapshot.val();
+    await set(ref(database, "contracts/" + code), {
+      name: data.name,
+      phone: data.phone,
+      contractImage: data.offerImage,
+      accountsImage: data.drawingImage
+    });
+    await remove(ref(database, "clients/" + code));
+    alert("✅ تم النقل");
+    location.reload();
+  };
+
+  function filterTable() {
+    const value = document.getElementById("search").value.toLowerCase();
+    const rows = document.querySelectorAll("#tableBody tr");
+    rows.forEach(row => {
+      const name = row.children[1]?.innerText?.toLowerCase() || "";
+      const phone = row.children[2]?.innerText?.toLowerCase() || "";
+      row.style.display = (name.includes(value) || phone.includes(value)) ? "" : "none";
+    });
+  }
+
+  window.onload = function () {
+    document.getElementById("search").addEventListener("input", filterTable);
+    const dbRef = ref(database, "clients");
+    const tableBody = document.getElementById("tableBody");
+    get(dbRef).then(snapshot => {
+      if (snapshot.exists()) {
+        snapshot.forEach(childSnap => {
+          const code = childSnap.key;
+          const data = childSnap.val();
+          const row = tableBody.insertRow();
+          row.setAttribute('data-code', code);
+          row.innerHTML = `
+            <td>${code}</td>
+            <td>${data.name}</td>
+            <td>${data.phone}</td>
+            <td><img src="${data.offerImage}" alt="عرض السعر" /></td>
+            <td><img src="${data.drawingImage}" alt="الرسومات" /></td>
+            <td class="actions">
+              <button onclick="confirmRow('${code}')" class="confirm-btn">تأكيد</button>
+              <button onclick="editRow('${code}')" class="edit-btn">تعديل</button>
+              <button onclick="sendToContract('${code}')" class="contract-btn">عقد</button>
+            </td>`;
+          if (+code > rowCount) rowCount = +code;
+        });
+      }
+    });
+  };
+</script>
+
 </head>
 <body>
   <div class="container">
