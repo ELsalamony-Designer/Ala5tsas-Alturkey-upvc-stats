@@ -153,6 +153,7 @@
             <td data-label="الكود">${code}</td>
             <td data-label="الاسم">${data.name}</td>
             <td data-label="رقم الهاتف">${data.phone}</td>
+            <td data-label="البائع">${data.seller || ''}</td>
             <td data-label="رابط صورة العقد"><input type="text" id="contract-${code}" value="${data.contractImage || ''}" /></td>
             <td data-label="رابط صورة الحسابات"><input type="text" id="accounts-${code}" value="${data.accountsImage || ''}" /></td>
             <td data-label="صورة العقد">${renderFile(data.contractImage, 'العقد')}</td>
@@ -177,6 +178,7 @@
         await set(ref(database, `contracts/${code}`), {
           name: data.name,
           phone: data.phone,
+          seller: data.seller || '',
           contractImage: contractURL,
           accountsImage: accountsURL
         });
@@ -192,6 +194,7 @@
         await set(ref(database, `clients/${code}`), {
           name: data.name,
           phone: data.phone,
+          seller: data.seller || '',
           offerImage: data.contractImage,
           drawingImage: data.accountsImage
         });
@@ -231,6 +234,7 @@
           <th>الكود</th>
           <th>الاسم</th>
           <th>رقم الهاتف</th>
+          <th>اسم البائع</th>
           <th>رابط صورة العقد</th>
           <th>رابط صورة الحسابات</th>
           <th>صورة العقد</th>
