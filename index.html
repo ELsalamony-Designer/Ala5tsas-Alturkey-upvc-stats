@@ -1,220 +1,32 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>إدارة العملاء</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body {
-      font-family: 'Cairo', sans-serif;
-      direction: rtl;
-      padding: 20px;
-      background-color: #f8f9fa;
-      color: #343a40;
-      margin: 0;
-    }
-    .container {
-      max-width: 1200px;
-      margin: auto;
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    }
-    h2 {
-      text-align: center;
-      color: #007bff;
-    }
-    .top-buttons {
-      display: flex;
-      justify-content: flex-start;
-      gap: 10px;
-      margin-bottom: 15px;
-      flex-wrap: wrap;
-    }
-    .top-buttons a, .top-buttons button {
-      padding: 10px 20px;
-      border-radius: 4px;
-      font-weight: bold;
-      font-size: 16px;
-      color: white;
-      border: none;
-      cursor: pointer;
-      text-decoration: none;
-    }
+    body { font-family: 'Cairo', sans-serif; direction: rtl; padding: 20px; background-color: #f8f9fa; color: #343a40; margin: 0; }
+    .container { max-width: 1200px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    h2 { text-align: center; color: #007bff; }
+    .top-buttons { display: flex; justify-content: flex-start; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+    .top-buttons button, .top-buttons a { padding: 10px 20px; border-radius: 4px; font-weight: bold; font-size: 16px; color: white; border: none; cursor: pointer; text-decoration: none; }
     .btn-primary { background-color: #007bff; }
     .btn-add { background-color: #28a745; }
-    .search-box {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .search-box input {
-      padding: 10px;
-      width: 80%;
-      max-width: 400px;
-      font-size: 16px;
-      border: 1px solid #dee2e6;
-      border-radius: 4px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th, td {
-      padding: 10px;
-      text-align: center;
-      border: 1px solid #dee2e6;
-    }
-    th {
-      background-color: #007bff;
-      color: white;
-    }
-    img {
-      max-width: 100px;
-      max-height: 80px;
-      border: 1px solid #dee2e6;
-    }
-    .actions button {
-      padding: 5px 10px;
-      margin: 2px;
-      border-radius: 4px;
-      border: none;
-      color: white;
-      cursor: pointer;
-    }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 10px; text-align: center; border: 1px solid #dee2e6; }
+    th { background-color: #007bff; color: white; }
+    .actions button { padding: 5px 10px; margin: 2px; border-radius: 4px; border: none; color: white; cursor: pointer; }
     .confirm-btn { background-color: #28a745; }
     .edit-btn { background-color: #6c757d; }
     .contract-btn { background-color: #007bff; }
   </style>
-
-  <script type="module" src="firebase-config.js"></script>
-  <script type="module">
-    import { getDatabase, ref, set, remove, get, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-    import { database } from './firebase-config.js';
-
-    let rowCount = 0;
-
-    window.addRow = function () {
-      const tableBody = document.getElementById("tableBody");
-      let nextCode = 1;
-      if (tableBody.rows.length > 0) {
-        const lastCode = parseInt(tableBody.rows[tableBody.rows.length - 1].cells[0].innerText);
-        nextCode = lastCode + 1;
-      }
-      if (nextCode <= rowCount) nextCode = rowCount + 1;
-
-      const row = tableBody.insertRow();
-      row.setAttribute('data-code', nextCode);
-      row.innerHTML = `
-        <td>${nextCode}</td>
-        <td><input type="text" id="name-${nextCode}" placeholder="اسم العميل"></td>
-        <td><input type="text" id="phone-${nextCode}" placeholder="رقم الهاتف"></td>
-        <td><input type="text" id="offer-${nextCode}" placeholder="رابط عرض السعر"></td>
-        <td><input type="text" id="drawing-${nextCode}" placeholder="رابط الرسومات"></td>
-        <td class="actions">
-          <button onclick="confirmRow('${nextCode}')" class="confirm-btn">تأكيد</button>
-          <button onclick="editRow('${nextCode}')" class="edit-btn">تعديل</button>
-          <button onclick="sendToContract('${nextCode}')" class="contract-btn">عقد</button>
-        </td>`;
-      rowCount = nextCode;
-    };
-
-    window.confirmRow = async function (code) {
-      const name = document.getElementById(`name-${code}`).value.trim();
-      const phone = document.getElementById(`phone-${code}`).value.trim();
-      const offer = document.getElementById(`offer-${code}`).value.trim();
-      const drawing = document.getElementById(`drawing-${code}`).value.trim();
-      if (!name || !phone || !offer || !drawing) {
-        alert("يرجى ملء جميع الحقول");
-        return;
-      }
-      await set(ref(database, "clients/" + code), {
-        name: name,
-        phone: phone,
-        offerImage: offer,
-        drawingImage: drawing
-      });
-      alert("✅ تم حفظ البيانات");
-      location.reload();
-    };
-
-    window.editRow = async function (code) {
-      const snapshot = await get(child(ref(database), `clients/${code}`));
-      if (!snapshot.exists()) return;
-      const data = snapshot.val();
-      const row = document.querySelector(`tr[data-code='${code}']`);
-      row.children[1].innerHTML = `<input type="text" id="name-${code}" value="${data.name}">`;
-      row.children[2].innerHTML = `<input type="text" id="phone-${code}" value="${data.phone}">`;
-      row.children[3].innerHTML = `<input type="text" id="offer-${code}" value="${data.offerImage}">`;
-      row.children[4].innerHTML = `<input type="text" id="drawing-${code}" value="${data.drawingImage}">`;
-    };
-
-    window.sendToContract = async function (code) {
-      if (!confirm("هل تريد نقل العميل إلى العقود؟")) return;
-      const snapshot = await get(child(ref(database), `clients/${code}`));
-      if (!snapshot.exists()) return;
-      const data = snapshot.val();
-      await set(ref(database, "contracts/" + code), {
-        name: data.name,
-        phone: data.phone,
-        contractImage: data.offerImage,
-        accountsImage: data.drawingImage
-      });
-      await remove(ref(database, "clients/" + code));
-      alert("✅ تم النقل");
-      location.reload();
-    };
-
-    function filterTable() {
-      const value = document.getElementById("search").value.toLowerCase();
-      const rows = document.querySelectorAll("#tableBody tr");
-      rows.forEach(row => {
-        const name = row.children[1]?.innerText?.toLowerCase() || "";
-        const phone = row.children[2]?.innerText?.toLowerCase() || "";
-        row.style.display = (name.includes(value) || phone.includes(value)) ? "" : "none";
-      });
-    }
-
-    window.onload = function () {
-      document.getElementById("search").addEventListener("input", filterTable);
-      const dbRef = ref(database, "clients");
-      const tableBody = document.getElementById("tableBody");
-      get(dbRef).then(snapshot => {
-        if (snapshot.exists()) {
-          snapshot.forEach(childSnap => {
-            const code = childSnap.key;
-            const data = childSnap.val();
-            const row = tableBody.insertRow();
-            row.setAttribute('data-code', code);
-            row.innerHTML = `
-              <td>${code}</td>
-              <td>${data.name}</td>
-              <td>${data.phone}</td>
-              <td><img src="${data.offerImage}" alt="عرض السعر" /></td>
-              <td><img src="${data.drawingImage}" alt="الرسومات" /></td>
-              <td class="actions">
-                <button onclick="confirmRow('${code}')" class="confirm-btn">تأكيد</button>
-                <button onclick="editRow('${code}')" class="edit-btn">تعديل</button>
-                <button onclick="sendToContract('${code}')" class="contract-btn">عقد</button>
-              </td>`;
-            if (+code > rowCount) rowCount = +code;
-          });
-        }
-      });
-    };
-  </script>
 </head>
 <body>
   <div class="container">
     <div class="top-buttons">
-      <a href="contract.html" class="btn-primary">📄 صفحة العقود</a>
       <button onclick="addRow()" class="btn-add">➕ إضافة عميل جديد</button>
     </div>
     <h2>📋 إدارة العملاء</h2>
-    <div class="search-box">
-      <input type="text" id="search" placeholder="ابحث بالاسم أو رقم الهاتف...">
-    </div>
     <table>
       <thead>
         <tr>
@@ -223,11 +35,142 @@
           <th>رقم الهاتف</th>
           <th>عرض السعر</th>
           <th>الرسومات</th>
+          <th>اسم البائع</th>
           <th>التحكم</th>
         </tr>
       </thead>
       <tbody id="tableBody"></tbody>
     </table>
   </div>
+
+  <!-- Firebase config -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, set, remove, get, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyC15Rb8pukWGcdDlmgEig8YGiIG27RGxJc",
+      authDomain: "aaus-654c4.firebaseapp.com",
+      databaseURL: "https://aaus-654c4-default-rtdb.firebaseio.com",
+      projectId: "aaus-654c4",
+      storageBucket: "aaus-654c4.appspot.com",
+      messagingSenderId: "976513022962",
+      appId: "1:976513022962:web:35f5ec4acfa0efef6e896b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+    const storage = getStorage(app);
+
+    let rowCount = 0;
+
+    window.addRow = function () {
+      const tableBody = document.getElementById("tableBody");
+      const code = rowCount + 1;
+      const row = tableBody.insertRow();
+      row.setAttribute('data-code', code);
+      row.innerHTML = `
+        <td>${code}</td>
+        <td><input type="text" id="name-${code}" placeholder="اسم العميل"></td>
+        <td><input type="text" id="phone-${code}" placeholder="رقم الهاتف"></td>
+        <td><input type="file" id="offer-${code}"></td>
+        <td><input type="file" id="drawing-${code}"></td>
+        <td>
+          <select id="seller-${code}">
+            <option value="أحمد">أحمد</option>
+            <option value="محمود">محمود</option>
+            <option value="نور">نور</option>
+          </select>
+        </td>
+        <td class="actions">
+          <button onclick="confirmRow('${code}')" class="confirm-btn">تأكيد</button>
+          <button onclick="sendToContract('${code}')" class="contract-btn">عقد</button>
+        </td>`;
+      rowCount = code;
+    };
+
+    window.confirmRow = async function (code) {
+      const name = document.getElementById(`name-${code}`).value.trim();
+      const phone = document.getElementById(`phone-${code}`).value.trim();
+      const seller = document.getElementById(`seller-${code}`).value;
+      const offerFile = document.getElementById(`offer-${code}`).files[0];
+      const drawingFile = document.getElementById(`drawing-${code}`).files[0];
+
+      if (!name || !phone || !offerFile || !drawingFile) {
+        alert("يرجى ملء جميع الحقول واختيار الملفات");
+        return;
+      }
+
+      try {
+        const offerPath = `offers/${Date.now()}_${offerFile.name}`;
+        const drawingPath = `drawings/${Date.now()}_${drawingFile.name}`;
+
+        const offerRef = sRef(storage, offerPath);
+        const drawingRef = sRef(storage, drawingPath);
+
+        await uploadBytes(offerRef, offerFile);
+        await uploadBytes(drawingRef, drawingFile);
+
+        const offerURL = await getDownloadURL(offerRef);
+        const drawingURL = await getDownloadURL(drawingRef);
+
+        await set(ref(database, "clients/" + code), {
+          name,
+          phone,
+          seller,
+          offerImage: offerURL,
+          drawingImage: drawingURL
+        });
+
+        alert("✅ تم حفظ البيانات");
+        location.reload();
+      } catch (err) {
+        alert("❌ خطأ أثناء الحفظ: " + err.message);
+      }
+    };
+
+    window.sendToContract = async function (code) {
+      if (!confirm("هل تريد نقل العميل إلى العقود؟")) return;
+      const snapshot = await get(child(ref(database), "clients/" + code));
+      if (!snapshot.exists()) return;
+      const data = snapshot.val();
+      await set(ref(database, "contracts/" + code), {
+        name: data.name,
+        phone: data.phone,
+        seller: data.seller,
+        contractImage: data.offerImage,
+        accountsImage: data.drawingImage
+      });
+      await remove(ref(database, "clients/" + code));
+      alert("✅ تم النقل إلى العقود");
+      location.reload();
+    };
+
+    window.onload = function () {
+      const dbRef = ref(database, "clients");
+      const tableBody = document.getElementById("tableBody");
+      get(dbRef).then(snapshot => {
+        if (snapshot.exists()) {
+          snapshot.forEach(childSnap => {
+            const code = childSnap.key;
+            const data = childSnap.val();
+            const row = tableBody.insertRow();
+            row.innerHTML = `
+              <td>${code}</td>
+              <td>${data.name}</td>
+              <td>${data.phone}</td>
+              <td><a href="${data.offerImage}" target="_blank">عرض</a></td>
+              <td><a href="${data.drawingImage}" target="_blank">رسم</a></td>
+              <td>${data.seller}</td>
+              <td class="actions">
+                <button onclick="sendToContract('${code}')" class="contract-btn">عقد</button>
+              </td>`;
+            if (+code > rowCount) rowCount = +code;
+          });
+        }
+      });
+    };
+  </script>
 </body>
 </html>
