@@ -88,12 +88,11 @@
     .contract-btn { background-color: #007bff; }
   </style>
 
+  <script type="module" src="firebase-config.js"></script>
   <script type="module">
-    import { database } from './firebase-config.js';
     import { getDatabase, ref, set, remove, get, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-    import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+    import { database } from './firebase-config.js';
 
-    const storage = getStorage();
     let rowCount = 0;
 
     window.addRow = function () {
@@ -111,8 +110,8 @@
         <td>${nextCode}</td>
         <td><input type="text" id="name-${nextCode}" placeholder="اسم العميل"></td>
         <td><input type="text" id="phone-${nextCode}" placeholder="رقم الهاتف"></td>
-        <td><input type="file" id="offer-${nextCode}" accept="image/*,application/pdf"></td>
-        <td><input type="file" id="drawing-${nextCode}" accept="image/*,application/pdf"></td>
+        <td><input type="text" id="offer-${nextCode}" placeholder="رابط عرض السعر"></td>
+        <td><input type="text" id="drawing-${nextCode}" placeholder="رابط الرسومات"></td>
         <td class="actions">
           <button onclick="confirmRow('${nextCode}')" class="confirm-btn">تأكيد</button>
           <button onclick="editRow('${nextCode}')" class="edit-btn">تعديل</button>
@@ -122,50 +121,38 @@
     };
 
     window.confirmRow = async function (code) {
-      const name = document.getElementById(`name-${code}`).value.trim();
-      const phone = document.getElementById(`phone-${code}`).value.trim();
-      const offerFile = document.getElementById(`offer-${code}`).files[0];
-      const drawingFile = document.getElementById(`drawing-${code}`).files[0];
-
-      if (!name || !phone || !offerFile || !drawingFile) {
-        alert("يرجى ملء جميع الحقول واختيار الملفات");
+      const name = document.getElementById(name-${code}).value.trim();
+      const phone = document.getElementById(phone-${code}).value.trim();
+      const offer = document.getElementById(offer-${code}).value.trim();
+      const drawing = document.getElementById(drawing-${code}).value.trim();
+      if (!name || !phone || !offer || !drawing) {
+        alert("يرجى ملء جميع الحقول");
         return;
       }
-
-      const offerRef = storageRef(storage, `clients/${code}/offer_${offerFile.name}`);
-      const drawingRef = storageRef(storage, `clients/${code}/drawing_${drawingFile.name}`);
-
-      await uploadBytes(offerRef, offerFile);
-      await uploadBytes(drawingRef, drawingFile);
-
-      const offerURL = await getDownloadURL(offerRef);
-      const drawingURL = await getDownloadURL(drawingRef);
-
       await set(ref(database, "clients/" + code), {
         name: name,
         phone: phone,
-        offerImage: offerURL,
-        drawingImage: drawingURL
+        offerImage: offer,
+        drawingImage: drawing
       });
-
-      alert("✅ تم حفظ البيانات ورفع الملفات");
+      alert("✅ تم حفظ البيانات");
       location.reload();
     };
 
     window.editRow = async function (code) {
-      const snapshot = await get(child(ref(database), `clients/${code}`));
+      const snapshot = await get(child(ref(database), clients/${code}));
       if (!snapshot.exists()) return;
       const data = snapshot.val();
-      const row = document.querySelector(`tr[data-code='${code}']`);
-      row.children[1].innerHTML = `<input type="text" id="name-${code}" value="${data.name}">`;
-      row.children[2].innerHTML = `<input type="text" id="phone-${code}" value="${data.phone}">`;
-      row.children[3].innerHTML = `<input type="file" id="offer-${code}" accept="image/*,application/pdf">`;
-      row.children[4].innerHTML = `<input type="file" id="drawing-${code}" accept="image/*,application/pdf">`;
+      const row = document.querySelector(tr[data-code='${code}']);
+      row.children[1].innerHTML = <input type="text" id="name-${code}" value="${data.name}">;
+      row.children[2].innerHTML = <input type="text" id="phone-${code}" value="${data.phone}">;
+      row.children[3].innerHTML = <input type="text" id="offer-${code}" value="${data.offerImage}">;
+      row.children[4].innerHTML = <input type="text" id="drawing-${code}" value="${data.drawingImage}">;
     };
 
     window.sendToContract = async function (code) {
       if (!confirm("هل تريد نقل العميل إلى العقود؟")) return;
-      const snapshot = await get(child(ref(database), `clients/${code}`));
+      const snapshot = await get(child(ref(database), clients/${code}));
       if (!snapshot.exists()) return;
       const data = snapshot.val();
       await set(ref(database, "contracts/" + code), {
