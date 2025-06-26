@@ -86,6 +86,20 @@
     .confirm-btn { background-color: #28a745; }
     .edit-btn { background-color: #6c757d; }
     .contract-btn { background-color: #007bff; }
+    .file-btn {
+  display: inline-block;
+  padding: 5px 10px;
+  background-color: #17a2b8;
+  color: white;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 14px;
+}
+.file-btn:hover {
+  background-color: #138496;
+}
+
   </style>
 
   <script type="module" src="firebase-config.js"></script>
@@ -176,6 +190,16 @@
     });
   }
 
+  function renderFileCell(link, label) {
+    const ext = link.split('.').pop().toLowerCase();
+    const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
+    if (isImage) {
+      return `<img src="${link}" alt="${label}" />`;
+    } else {
+      return `<a href="${link}" target="_blank" class="file-btn">📄 فتح ${label}</a>`;
+    }
+  }
+
   window.onload = function () {
     document.getElementById("search").addEventListener("input", filterTable);
     const dbRef = ref(database, "clients");
@@ -191,8 +215,8 @@
             <td>${code}</td>
             <td>${data.name}</td>
             <td>${data.phone}</td>
-            <td><img src="${data.offerImage}" alt="عرض السعر" /></td>
-            <td><img src="${data.drawingImage}" alt="الرسومات" /></td>
+            <td>${renderFileCell(data.offerImage, 'عرض السعر')}</td>
+            <td>${renderFileCell(data.drawingImage, 'الرسومات')}</td>
             <td class="actions">
               <button onclick="confirmRow('${code}')" class="confirm-btn">تأكيد</button>
               <button onclick="editRow('${code}')" class="edit-btn">تعديل</button>
@@ -204,6 +228,7 @@
     });
   };
 </script>
+
 
 </head>
 <body>
