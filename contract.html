@@ -86,10 +86,44 @@
     .return-btn { background: var(--secondary-color); }
     .edit-btn { background: var(--accent-color); color: #000; }
     .delete-btn { background: var(--danger-color); }
+    .file-btn {
+      display: inline-block;
+      padding: 5px 10px;
+      background-color: #17a2b8;
+      color: white;
+      border-radius: 4px;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    .file-btn:hover {
+      background-color: #138496;
+    }
+    .home-button {
+      display: inline-block;
+      margin-bottom: 20px;
+      background: var(--secondary-color);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-weight: bold;
+    }
   </style>
   <script type="module">
     import { getDatabase, ref, set, remove, get, child } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
     import { database } from './firebase-config.js';
+
+    function renderFile(link, label) {
+      if (!link) return 'لا يوجد';
+      const ext = link.split('.').pop().toLowerCase();
+      const isImage = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext);
+      if (isImage) {
+        return `<img src="${link}" alt="${label}" />`;
+      } else {
+        return `<a href="${link}" target="_blank" class="file-btn">📄 فتح ${label}</a>`;
+      }
+    }
 
     window.onload = function () {
       loadContracts();
@@ -121,8 +155,8 @@
             <td data-label="رقم الهاتف">${data.phone}</td>
             <td data-label="رابط صورة العقد"><input type="text" id="contract-${code}" value="${data.contractImage || ''}" /></td>
             <td data-label="رابط صورة الحسابات"><input type="text" id="accounts-${code}" value="${data.accountsImage || ''}" /></td>
-            <td data-label="صورة العقد"><img src="${data.contractImage || 'https://via.placeholder.com/100x80'}" /></td>
-            <td data-label="صورة الحسابات"><img src="${data.accountsImage || 'https://via.placeholder.com/100x80'}" /></td>
+            <td data-label="صورة العقد">${renderFile(data.contractImage, 'العقد')}</td>
+            <td data-label="صورة الحسابات">${renderFile(data.accountsImage, 'الحسابات')}</td>
             <td class="actions">
               <button class="save-btn" onclick="saveImages('${code}')">تأكيد</button>
               <button class="return-btn" onclick="returnToClients('${code}')">إرجاع</button>
@@ -146,7 +180,7 @@
           contractImage: contractURL,
           accountsImage: accountsURL
         });
-        alert("✅ تم حفظ الصور الجديدة بنجاح!");
+        alert("✅ تم حفظ الصور أو الملفات الجديدة بنجاح!");
         location.reload();
       }
     };
